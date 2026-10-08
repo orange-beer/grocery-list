@@ -24,7 +24,6 @@ html, body {
 }
 body { padding-bottom: 30px; }
 
-/* ========== 顶部栏 ========== */
 .topbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 60;
   background: var(--primary); color: #fff;
@@ -57,7 +56,6 @@ body { padding-bottom: 30px; }
 .btn-primary { background: #fff; color: var(--primary); }
 .btn:active { opacity: .8; }
 
-/* ========== 分类 tabs ========== */
 .cat-tabs {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto;
@@ -73,7 +71,6 @@ body { padding-bottom: 30px; }
 }
 .cat-tab.active { color: #fff; background: var(--primary); }
 
-/* ========== 挑菜模式：网格 ========== */
 .grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
   padding: 12px 16px;
@@ -112,7 +109,6 @@ body { padding-bottom: 30px; }
 }
 .card.checked .check-circle::after { opacity: 1; }
 
-/* 卡片展开区（数量 + 备注） */
 .card-expand {
   height: 0; overflow: hidden; opacity: 0;
   transition: opacity .2s ease;
@@ -137,7 +133,6 @@ body { padding-bottom: 30px; }
 }
 .note-input:focus { outline: none; border-color: var(--primary); }
 
-/* ========== 采购模式：待办清单 ========== */
 .todo-wrap {
   max-width: 500px; margin: 0 auto;
   padding: 12px 16px;
@@ -188,7 +183,6 @@ body { padding-bottom: 30px; }
 }
 .todo-qty.plus { background: #e8f8ef; color: var(--primary); }
 
-/* ========== 删减按钮（划掉） ========== */
 .todo-strike {
   flex-shrink: 0;
   width: 28px; height: 28px;
@@ -206,7 +200,6 @@ body { padding-bottom: 30px; }
 }
 .todo-strike:active { transform: scale(.9); }
 
-/* 已划掉状态 */
 .todo-item.struck .todo-name {
   text-decoration: line-through;
   color: #b0b0b5;
@@ -229,7 +222,6 @@ body { padding-bottom: 30px; }
 .todo-item.struck .todo-strike::before { content: "✕"; }
 .todo-item.struck .todo-strike span { display: none; }
 
-/* 划掉原因标签 */
 .todo-reason {
   display: inline-block;
   font-size: 11px;
@@ -241,7 +233,6 @@ body { padding-bottom: 30px; }
   margin-top: 4px;
 }
 
-/* ========== 空状态 / 底部 ========== */
 .empty {
   max-width: 500px; margin: 40px auto; text-align: center;
   color: #bbb; font-size: 14px; padding: 40px 20px;
@@ -249,7 +240,6 @@ body { padding-bottom: 30px; }
 .empty .icon { font-size: 48px; margin-bottom: 12px; }
 .footer { text-align: center; font-size: 12px; color: #ccc; margin-top: 24px; }
 
-/* ========== 弹窗 ========== */
 .modal-mask {
   position: fixed; inset: 0; z-index: 200; display: none;
   align-items: center; justify-content: center; padding: 20px;
@@ -278,7 +268,6 @@ body { padding-bottom: 30px; }
   display: flex; justify-content: center; padding: 12px;
   background: #fafafa; border-radius: 10px; min-height: 200px;
 }
-/* 短链状态提示 */
 .short-status {
   text-align: center;
   font-size: 12px;
@@ -318,7 +307,6 @@ body { padding-bottom: 30px; }
 }
 .add-input:focus, .add-select:focus { outline: none; border-color: var(--primary); }
 
-/* 快捷原因按钮 */
 .quick-reason-btn {
   padding: 5px 12px;
   border-radius: 14px;
@@ -330,7 +318,6 @@ body { padding-bottom: 30px; }
 }
 .quick-reason-btn:active { background: #ececf0; }
 
-/* 导出文字区 */
 .export-area {
   width: 100%;
   min-height: 220px;
@@ -350,7 +337,6 @@ body { padding-bottom: 30px; }
   background: #fff;
 }
 
-/* ========== Toast ========== */
 .toast {
   position: fixed; left: 50%; bottom: 40px;
   transform: translateX(-50%) translateY(20px);
@@ -365,7 +351,6 @@ body { padding-bottom: 30px; }
 
 <div id="app">
 
-  <!-- ========== 顶部栏 ========== -->
   <div class="topbar">
     <div class="title-row">
       <h1>{{ mode === 'picker' ? '🛒 每周买菜清单' : '✅ 采购清单' }}</h1>
@@ -401,7 +386,6 @@ body { padding-bottom: 30px; }
     </div>
   </div>
 
-  <!-- ========== 挑菜模式 ========== -->
   <template v-if="mode === 'picker'">
     <div class="cat-tabs">
       <button
@@ -429,7 +413,6 @@ body { padding-bottom: 30px; }
         <span v-else-if="item.tag" class="card-badge badge-season">{{ item.tag }}</span>
         <div class="check-circle"></div>
 
-        <!-- 数量 + 备注（勾选后展开） -->
         <div class="card-expand" @click.stop>
           <div class="qty-row">
             <button class="qty-btn" @click.stop="changeQty(item.n, -1)">－</button>
@@ -448,7 +431,6 @@ body { padding-bottom: 30px; }
     </div>
   </template>
 
-  <!-- ========== 采购模式 ========== -->
   <template v-else>
     <div class="todo-wrap">
       <div class="todo-progress" v-if="todoList.length">
@@ -506,7 +488,7 @@ body { padding-bottom: 30px; }
     </div>
   </template>
 
-  <!-- ========== 分享弹窗 ========== -->
+  <!-- 分享弹窗 -->
   <div class="modal-mask" :class="{ show: showShare }" @click.self="showShare = false">
     <div class="modal"><div class="modal-inner">
       <h3>分享采购清单</h3>
@@ -517,10 +499,10 @@ body { padding-bottom: 30px; }
       <div id="qrcode"></div>
       <div class="short-status">
         <span v-if="shortUrlLoading">
-          <span class="loading"></span>正在生成短链...
+          <span class="loading"></span>正在生成短链...<span style="color:#aaa;margin-left:4px">{{ shortUrlTrying }}</span>
         </span>
         <span v-else-if="shortUrlReady" style="color:var(--primary)">
-          ✓ 已生成短链
+          ✓ 已通过 {{ shortUrlSource }} 生成短链
         </span>
         <span v-else-if="shortUrlFailed" style="color:#ff9500">
           短链生成失败，使用原始链接
@@ -535,7 +517,7 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
-  <!-- ========== 添加自选弹窗 ========== -->
+  <!-- 添加自选 -->
   <div class="modal-mask" :class="{ show: showAdd }" @click.self="showAdd = false">
     <div class="modal"><div class="modal-inner">
       <h3>添加自选食材</h3>
@@ -550,7 +532,7 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
-  <!-- ========== 划掉原因弹窗 ========== -->
+  <!-- 划掉原因 -->
   <div class="modal-mask" :class="{ show: showReason }" @click.self="cancelReason">
     <div class="modal"><div class="modal-inner">
       <h3>划掉「{{ reasonTarget ? reasonTarget.name : '' }}」</h3>
@@ -579,7 +561,7 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
-  <!-- ========== 导出采购情况弹窗 ========== -->
+  <!-- 导出采购情况 -->
   <div class="modal-mask" :class="{ show: showExport }" @click.self="showExport = false">
     <div class="modal"><div class="modal-inner">
       <h3>采购情况</h3>
@@ -598,7 +580,7 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
-  <!-- ========== 角色切换提示 ========== -->
+  <!-- 角色切换提示 -->
   <div class="modal-mask" :class="{ show: showRoleSwitch }" @click.self="showRoleSwitch = false">
     <div class="modal"><div class="modal-inner">
       <h3>检测到采购清单</h3>
@@ -610,7 +592,6 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
-  <!-- ========== Toast ========== -->
   <div class="toast" :class="{ show: toastShow }">{{ toastMsg }}</div>
 </div>
 
@@ -666,31 +647,73 @@ const allItemsData = [
   {n:"豌豆",c:"其他",tag:"春",icon:"🫛"},{n:"蚕豆",c:"其他",tag:"春",icon:"🫛"},{n:"玉米粒",c:"其他",tag:"",icon:"🌽"}
 ];
 
-/* ==================== 短链服务 ==================== */
-// is.gd 免费短链 API，不需要 key
-async function shortenUrl(longUrl, timeoutMs = 6000) {
-  // 用 Promise.race 做超时控制
-  const fetchTask = (async () => {
-    const api = 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
-    const res = await fetch(api, { method: 'GET' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (data.shorturl) return data.shorturl;
-    if (data.errormessage) throw new Error(data.errormessage);
-    throw new Error('no shorturl');
-  })();
+/* ==================== 多短链服务 ==================== */
+// 每个服务返回一个 { name, fn(longUrl) } 对象
+// fn 应返回 Promise<string | null>，成功返回短链，失败抛错或返回 null
 
-  const timeoutTask = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), timeoutMs)
-  );
+const shorteners = [
+  {
+    name: 'is.gd',
+    async fn(longUrl) {
+      const api = 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
+      const res = await fetch(api);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.shorturl) return data.shorturl;
+      throw new Error(data.errormessage || 'no shorturl');
+    }
+  },
+  {
+    name: 'v.gd',
+    async fn(longUrl) {
+      const api = 'https://v.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
+      const res = await fetch(api);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.shorturl) return data.shorturl;
+      throw new Error(data.errormessage || 'no shorturl');
+    }
+  },
+  {
+    name: 'tinyurl',
+    async fn(longUrl) {
+      // tinyurl 支持 GET 简单用法（no key）
+      const api = 'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl);
+      const res = await fetch(api);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = (await res.text()).trim();
+      if (text && text.startsWith('http')) return text;
+      throw new Error('bad response');
+    }
+  }
+];
 
-  return Promise.race([fetchTask, timeoutTask]);
+/**
+ * 依次尝试多个短链服务，返回第一个成功的。
+ * onTrying(name) 会在每次尝试前回调，便于 UI 显示"正在用 xx 生成"。
+ */
+async function shortenUrlMulti(longUrl, onTrying, perTryTimeout = 6000) {
+  for (const s of shorteners) {
+    try {
+      if (onTrying) onTrying(s.name);
+      const short = await Promise.race([
+        s.fn(longUrl),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), perTryTimeout))
+      ]);
+      if (short && short !== longUrl) {
+        return { short, source: s.name };
+      }
+    } catch (e) {
+      console.warn(`[短链] ${s.name} 失败：`, e.message || e);
+      // 继续试下一个
+    }
+  }
+  return null; // 全失败
 }
 
 /* ==================== 应用 ==================== */
 createApp({
   setup() {
-    /* ---------- 状态 ---------- */
     const mode = ref('picker');
     const allItems = ref([...allItemsData]);
     const state = ref({});
@@ -706,7 +729,9 @@ createApp({
     const shortUrlLoading = ref(false);
     const shortUrlReady = ref(false);
     const shortUrlFailed = ref(false);
-    let shareRequestId = 0;  // 防止旧请求覆盖新弹窗
+    const shortUrlSource = ref('');   // 成功的服务名
+    const shortUrlTrying = ref('');   // 当前正在尝试的服务名
+    let shareRequestId = 0;
 
     // 划掉原因
     const showReason = ref(false);
@@ -726,7 +751,6 @@ createApp({
 
     const cats = ['全部','叶菜','根茎','瓜果','菌菇','豆制品','调味','肉类','水产','蛋禽','其他'];
 
-    /* ---------- 计算属性 ---------- */
     const filteredItems = computed(() => {
       if (currentCat.value === '全部') return allItems.value;
       return allItems.value.filter(i => i.c === currentCat.value);
@@ -767,7 +791,7 @@ createApp({
       return (idx >= 0 && idx < todoList.value.length) ? todoList.value[idx] : null;
     });
 
-    /* ---------- 挑菜：勾选 ---------- */
+    /* ---------- 挑菜 ---------- */
     function toggleItem(name) {
       if (!state.value[name]) {
         state.value[name] = { on: false, q: 1, note: '' };
@@ -817,7 +841,6 @@ createApp({
       showToast('已添加');
     }
 
-    /* ---------- 生成二维码 ---------- */
     function generateQR(text) {
       const box = document.getElementById('qrcode');
       if (!box) return;
@@ -834,55 +857,52 @@ createApp({
       }
     }
 
-    /* ---------- 分享（含短链） ---------- */
     async function openShare() {
       const sel = Object.entries(state.value).filter(([, s]) => s.on);
       if (!sel.length) { showToast('还没有选择任何食材'); return; }
 
-      // 生成长链接
       const compact = sel.map(([k, s]) => [k, s.q || 1, s.note || '']);
       const data = encodeURIComponent(JSON.stringify(compact));
       const base = location.origin + location.pathname;
       const longUrl = base + '#list=' + data;
 
-      // 立即显示弹窗（先用长链接占位）
       shareUrl.value = longUrl;
       showShare.value = true;
       shortUrlLoading.value = true;
       shortUrlReady.value = false;
       shortUrlFailed.value = false;
+      shortUrlSource.value = '';
+      shortUrlTrying.value = '';
 
-      // 二维码先用长链接生成，保证立刻有东西看
-      nextTick(() => {
-        generateQR(longUrl);
-      });
+      nextTick(() => { generateQR(longUrl); });
 
-      // 标记本次请求，防止旧请求覆盖新弹窗
       const myReqId = ++shareRequestId;
 
-      // 后台请求短链
       try {
-        const short = await shortenUrl(longUrl);
-        if (myReqId !== shareRequestId) return;  // 已被新请求取代
+        const result = await shortenUrlMulti(
+          longUrl,
+          (name) => {
+            if (myReqId === shareRequestId) shortUrlTrying.value = name;
+          }
+        );
 
-        if (short && short !== longUrl) {
-          shareUrl.value = short;
+        if (myReqId !== shareRequestId) return;
+
+        if (result && result.short) {
+          shareUrl.value = result.short;
           shortUrlReady.value = true;
-          shortUrlFailed.value = false;
-          // 二维码重新生成（短链）
-          nextTick(() => { generateQR(short); });
+          shortUrlSource.value = result.source;
+          nextTick(() => { generateQR(result.short); });
         } else {
           shortUrlFailed.value = true;
         }
       } catch (e) {
-        console.warn('短链生成失败', e);
-        if (myReqId === shareRequestId) {
-          shortUrlFailed.value = true;
-          // 保留长链接，二维码不变
-        }
+        console.warn('短链流程异常', e);
+        if (myReqId === shareRequestId) shortUrlFailed.value = true;
       } finally {
         if (myReqId === shareRequestId) {
           shortUrlLoading.value = false;
+          shortUrlTrying.value = '';
         }
       }
     }
@@ -913,7 +933,7 @@ createApp({
       }
     }
 
-    /* ---------- 采购：勾选已买 ---------- */
+    /* ---------- 采购 ---------- */
     function toggleDone(idx) {
       const item = todoList.value[idx];
       if (item.struck) return;
@@ -921,7 +941,6 @@ createApp({
       saveShopperProgress();
     }
 
-    /* ---------- 采购：划掉 / 恢复 ---------- */
     function toggleStrike(idx) {
       const item = todoList.value[idx];
       if (item.struck) {
@@ -962,7 +981,6 @@ createApp({
       reasonText.value = '';
     }
 
-    /* ---------- 采购：全部买齐 ---------- */
     function toggleAllDone() {
       const target = !allDone.value;
       todoList.value.forEach(i => {
@@ -972,7 +990,6 @@ createApp({
       saveShopperProgress();
     }
 
-    /* ---------- 采购：重置 ---------- */
     function resetProgress() {
       if (!confirm('确定重置所有勾选和划掉吗？')) return;
       todoList.value.forEach(i => {
@@ -983,7 +1000,6 @@ createApp({
       saveShopperProgress();
     }
 
-    /* ---------- 采购：导出情况 ---------- */
     function buildExportText() {
       if (!todoList.value.length) return '（清单为空）';
 
@@ -1073,7 +1089,6 @@ createApp({
       }
     }
 
-    /* ---------- 采购进度保存 ---------- */
     function saveShopperProgress() {
       try {
         const raw = location.hash.startsWith('#list=') ? location.hash.slice(6) : '';
@@ -1111,7 +1126,6 @@ createApp({
       } catch (e) {}
     }
 
-    /* ---------- 回到挑菜模式 ---------- */
     function backToPicker() {
       history.replaceState(null, '', location.pathname);
       mode.value = 'picker';
@@ -1119,7 +1133,6 @@ createApp({
       loadPickerState();
     }
 
-    /* ---------- 挑菜状态持久化 ---------- */
     function loadPickerState() {
       try {
         const s = localStorage.getItem('buyList');
@@ -1130,7 +1143,6 @@ createApp({
       try { localStorage.setItem('buyList', JSON.stringify(v)); } catch (e) {}
     }, { deep: true });
 
-    /* ---------- 启动 ---------- */
     onMounted(() => {
       loadPickerState();
 
@@ -1178,6 +1190,7 @@ createApp({
       mode, allItems, state, todoList, currentCat,
       showShare, showAdd, showRoleSwitch, shareUrl, newItem,
       shortUrlLoading, shortUrlReady, shortUrlFailed,
+      shortUrlSource, shortUrlTrying,
       showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
       showExport, exportText, exportAreaRef,
       cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
