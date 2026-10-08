@@ -162,7 +162,7 @@ body { padding-bottom: 30px; }
 .todo-list { display: flex; flex-direction: column; gap: 10px; }
 .todo-item {
   display: flex; align-items: center; gap: 12px;
-  background: #fff; border-radius: 14px; padding: 16px;
+  background: #fff; border-radius: 14px; padding: 14px 14px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05);
   cursor: pointer; transition: opacity .2s ease, transform .1s ease;
   -webkit-user-select: none; user-select: none;
@@ -187,6 +187,59 @@ body { padding-bottom: 30px; }
   padding: 3px 9px; border-radius: 6px; background: #f2f2f7; color: #666;
 }
 .todo-qty.plus { background: #e8f8ef; color: var(--primary); }
+
+/* ========== 删减按钮（划掉） ========== */
+.todo-strike {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d1d6;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  color: #8e8e93;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 2px;
+}
+.todo-strike:active { transform: scale(.9); }
+
+/* 已划掉状态 */
+.todo-item.struck .todo-name {
+  text-decoration: line-through;
+  color: #b0b0b5;
+}
+.todo-item.struck .todo-note {
+  color: #c8c8cc;
+}
+.todo-item.struck .todo-qty {
+  background: #f5f5f7;
+  color: #c8c8cc;
+}
+.todo-item.struck .todo-checkbox {
+  border-color: #e5e5ea;
+}
+.todo-item.struck .todo-strike {
+  border-color: #ff3b30;
+  background: #ff3b30;
+  color: #fff;
+}
+.todo-item.struck .todo-strike::before { content: "✕"; }
+.todo-item.struck .todo-strike span { display: none; }
+
+/* 划掉原因标签 */
+.todo-reason {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #ffeef0;
+  color: #ff3b30;
+  margin-top: 4px;
+}
 
 /* ========== 空状态 / 底部 ========== */
 .empty {
@@ -242,6 +295,18 @@ body { padding-bottom: 30px; }
 }
 .add-input:focus, .add-select:focus { outline: none; border-color: var(--primary); }
 
+/* 快捷原因按钮 */
+.quick-reason-btn {
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid #e5e5ea;
+  background: #f7f7fa;
+  color: #555;
+  font-size: 12px;
+  cursor: pointer;
+}
+.quick-reason-btn:active { background: #ececf0; }
+
 /* ========== Toast ========== */
 .toast {
   position: fixed; left: 50%; bottom: 40px;
@@ -270,7 +335,8 @@ body { padding-bottom: 30px; }
       已选 {{ selectedCount }} / 共 {{ allItems.length }} 种
     </p>
     <p class="stats" v-else>
-      已买 {{ doneCount }} / {{ todoList.length }} 种
+      已买 {{ doneCount }} / {{ activeCount }} 种
+      <span v-if="struckCount > 0" style="opacity:.7">（已划 {{ struckCount }}）</span>
     </p>
 
     <div class="progress">
@@ -343,7 +409,7 @@ body { padding-bottom: 30px; }
     <div class="todo-wrap">
       <div class="todo-progress" v-if="todoList.length">
         <div class="tp-info">
-          <span>已完成 <span class="count">{{ doneCount }}</span> / {{ todoList.length }}</span>
+          <span>已完成 <span class="count">{{ doneCount }}</span> / {{ activeCount }}</span>
           <span>{{ progressPercent }}%</span>
         </div>
         <div class="tp-bar-bg">
@@ -356,7 +422,7 @@ body { padding-bottom: 30px; }
           v-for="(item, idx) in todoList"
           :key="idx"
           class="todo-item"
-          :class="{ done: item.done }"
+          :class="{ done: item.done && !item.struck, struck: item.struck }"
           @click="toggleDone(idx)"
         >
           <div class="todo-checkbox">
@@ -368,10 +434,22 @@ body { padding-bottom: 30px; }
           <div class="todo-body">
             <div class="todo-name">{{ item.name }}</div>
             <div class="todo-note" v-if="item.note">{{ item.note }}</div>
+            <!-- 划掉原因 -->
+            <div class="todo-reason" v-if="item.struck && item.reason">
+              ❌ {{ item.reason }}
+            </div>
           </div>
           <div class="todo-qty" :class="{ plus: item.qty > 1 }" v-if="item.qty > 1">
             ×{{ item.qty }}
           </div>
+          <!-- 删减按钮 -->
+          <button
+            class="todo-strike"
+            @click.stop="toggleStrike(idx)"
+            :title="item.struck ? '恢复' : '划掉'"
+          >
+            <span v-if="!item.struck">−</span>
+          </button>
         </div>
       </div>
 
@@ -381,7 +459,7 @@ body { padding-bottom: 30px; }
       </div>
 
       <div class="footer" v-if="todoList.length">
-        {{ doneCount === todoList.length ? '🎉 全部买齐了！' : '点击条目勾选已购买的食材' }}
+        {{ allDone ? '🎉 全部买齐了！' : '点击条目勾选已购买的食材 · 右侧按钮可划掉' }}
       </div>
     </div>
   </template>
@@ -415,6 +493,35 @@ body { padding-bottom: 30px; }
       <div class="modal-btns">
         <button class="btn btn-outline" @click="showAdd = false">取消</button>
         <button class="btn btn-primary" @click="doAdd">添加</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ========== 划掉原因弹窗 ========== -->
+  <div class="modal-mask" :class="{ show: showReason }" @click.self="cancelReason">
+    <div class="modal"><div class="modal-inner">
+      <h3>划掉「{{ reasonTarget ? reasonTarget.name : '' }}」</h3>
+      <p class="hint">请填写划掉原因（可选，方便下次参考）</p>
+      <input
+        class="add-input"
+        v-model="reasonText"
+        placeholder="如：家里还有 / 不新鲜 / 改买别的"
+        maxlength="30"
+        @keyup.enter="confirmReason"
+        ref="reasonInputRef"
+      >
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <button
+          v-for="r in quickReasons"
+          :key="r"
+          class="quick-reason-btn"
+          @click="reasonText = r"
+          type="button"
+        >{{ r }}</button>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-outline" @click="cancelReason">取消</button>
+        <button class="btn btn-primary" @click="confirmReason">确认划掉</button>
       </div>
     </div></div>
   </div>
@@ -502,6 +609,13 @@ createApp({
     const shareUrl = ref('');
     const newItem = ref({ name: '', cat: '其他' });
 
+    // 划掉原因
+    const showReason = ref(false);
+    const reasonText = ref('');
+    const reasonTargetIdx = ref(-1);
+    const reasonInputRef = ref(null);
+    const quickReasons = ['家里还有', '不太新鲜', '改买别的', '太贵了', '不需要'];
+
     const toastShow = ref(false);
     const toastMsg = ref('');
     let toastTimer;
@@ -519,7 +633,15 @@ createApp({
     );
 
     const doneCount = computed(() =>
-      todoList.value.filter(i => i.done).length
+      todoList.value.filter(i => i.done && !i.struck).length
+    );
+
+    const struckCount = computed(() =>
+      todoList.value.filter(i => i.struck).length
+    );
+
+    const activeCount = computed(() =>
+      todoList.value.filter(i => !i.struck).length
     );
 
     const progressPercent = computed(() => {
@@ -527,14 +649,19 @@ createApp({
         if (!allItems.value.length) return 0;
         return Math.round(selectedCount.value / allItems.value.length * 100);
       } else {
-        if (!todoList.value.length) return 0;
-        return Math.round(doneCount.value / todoList.value.length * 100);
+        if (!activeCount.value) return 0;
+        return Math.round(doneCount.value / activeCount.value * 100);
       }
     });
 
     const allDone = computed(() =>
-      todoList.value.length > 0 && doneCount.value === todoList.value.length
+      activeCount.value > 0 && doneCount.value === activeCount.value
     );
+
+    const reasonTarget = computed(() => {
+      const idx = reasonTargetIdx.value;
+      return (idx >= 0 && idx < todoList.value.length) ? todoList.value[idx] : null;
+    });
 
     /* ---------- 挑菜：勾选 ---------- */
     function toggleItem(name) {
@@ -644,31 +771,92 @@ createApp({
       }
     }
 
-    /* ---------- 采购：勾选 ---------- */
+    /* ---------- 采购：勾选已买 ---------- */
     function toggleDone(idx) {
-      todoList.value[idx].done = !todoList.value[idx].done;
+      const item = todoList.value[idx];
+      if (item.struck) return;  // 划掉的不能勾选
+      item.done = !item.done;
       saveShopperProgress();
     }
 
+    /* ---------- 采购：划掉 / 恢复 ---------- */
+    function toggleStrike(idx) {
+      const item = todoList.value[idx];
+      // 已划掉 → 直接恢复，不弹窗
+      if (item.struck) {
+        item.struck = false;
+        item.reason = '';
+        saveShopperProgress();
+        showToast('已恢复');
+        return;
+      }
+      // 未划掉 → 打开弹窗填原因
+      reasonTargetIdx.value = idx;
+      reasonText.value = '';
+      showReason.value = true;
+      nextTick(() => {
+        if (reasonInputRef.value) reasonInputRef.value.focus();
+      });
+    }
+
+    function confirmReason() {
+      const idx = reasonTargetIdx.value;
+      if (idx < 0 || idx >= todoList.value.length) {
+        showReason.value = false;
+        return;
+      }
+      const item = todoList.value[idx];
+      item.struck = true;
+      item.reason = reasonText.value.trim();
+      item.done = false;  // 划掉时取消已买
+      saveShopperProgress();
+      showReason.value = false;
+      reasonTargetIdx.value = -1;
+      reasonText.value = '';
+      showToast('已划掉');
+    }
+
+    function cancelReason() {
+      showReason.value = false;
+      reasonTargetIdx.value = -1;
+      reasonText.value = '';
+    }
+
+    /* ---------- 采购：全部买齐 ---------- */
     function toggleAllDone() {
       const target = !allDone.value;
-      todoList.value.forEach(i => i.done = target);
+      todoList.value.forEach(i => {
+        if (i.struck) return;
+        i.done = target;
+      });
       saveShopperProgress();
     }
 
+    /* ---------- 采购：重置 ---------- */
     function resetProgress() {
-      if (!confirm('确定重置所有勾选吗？')) return;
-      todoList.value.forEach(i => i.done = false);
+      if (!confirm('确定重置所有勾选和划掉吗？')) return;
+      todoList.value.forEach(i => {
+        i.done = false;
+        i.struck = false;
+        i.reason = '';
+      });
       saveShopperProgress();
     }
 
+    /* ---------- 采购进度保存 ---------- */
     function saveShopperProgress() {
       try {
         const raw = location.hash.startsWith('#list=') ? location.hash.slice(6) : '';
         const key = 'shopper_progress_' + hashCode(raw);
-        const doneMap = {};
-        todoList.value.forEach((item, i) => { if (item.done) doneMap[i] = true; });
-        localStorage.setItem(key, JSON.stringify(doneMap));
+        const map = {};
+        todoList.value.forEach((item, i) => {
+          map[i] = {
+            d: !!item.done,
+            s: !!item.struck,
+            r: item.reason || ''
+          };
+        });
+        localStorage.setItem(key, JSON.stringify(map));
       } catch (e) {}
     }
 
@@ -678,8 +866,18 @@ createApp({
         const key = 'shopper_progress_' + hashCode(raw);
         const saved = localStorage.getItem(key);
         if (!saved) return;
-        const doneMap = JSON.parse(saved);
-        todoList.value.forEach((item, i) => { if (doneMap[i]) item.done = true; });
+        const map = JSON.parse(saved);
+        todoList.value.forEach((item, i) => {
+          const m = map[i];
+          if (!m) return;
+          if (typeof m === 'boolean') {
+            item.done = m;
+          } else {
+            item.done = !!m.d;
+            item.struck = !!m.s;
+            item.reason = m.r || '';
+          }
+        });
       } catch (e) {}
     }
 
@@ -716,7 +914,9 @@ createApp({
               name: name || '',
               qty: qty || 1,
               note: note || '',
-              done: false
+              done: false,
+              struck: false,
+              reason: ''
             }));
             mode.value = 'shopper';
             loadShopperProgress();
@@ -747,11 +947,14 @@ createApp({
     return {
       mode, allItems, state, todoList, currentCat,
       showShare, showAdd, showRoleSwitch, shareUrl, newItem,
-      cats, filteredItems, selectedCount, doneCount, progressPercent, allDone,
+      showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
+      cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
+      progressPercent, allDone,
       toggleItem, changeQty, updateNote,
       selectAll, clearAll, doAdd,
       openShare, copyUrl, nativeShare,
-      toggleDone, toggleAllDone, resetProgress, backToPicker,
+      toggleDone, toggleStrike, toggleAllDone, resetProgress, backToPicker,
+      confirmReason, cancelReason,
       toastShow, toastMsg
     };
   }
