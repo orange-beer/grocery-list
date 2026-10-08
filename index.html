@@ -240,7 +240,6 @@ body { padding-bottom: 30px; }
 .empty .icon { font-size: 48px; margin-bottom: 12px; }
 .footer { text-align: center; font-size: 12px; color: #ccc; margin-top: 24px; }
 
-/* ========== 弹窗 ========== */
 .modal-mask {
   position: fixed; inset: 0; z-index: 200; display: none;
   align-items: center; justify-content: center; padding: 20px;
@@ -269,7 +268,6 @@ body { padding-bottom: 30px; }
   display: flex; justify-content: center; padding: 12px;
   background: #fafafa; border-radius: 10px; min-height: 200px;
 }
-/* 微信内的二维码容器：更大、更明显 */
 #qrcode.wechat-qr {
   background: #fff;
   border: 2px dashed #07c160;
@@ -279,6 +277,55 @@ body { padding-bottom: 30px; }
 #qrcode.wechat-qr img {
   display: block;
 }
+
+/* 二维码预览大图（微信内长按保存） */
+.qr-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: #fff;
+  border: 2px dashed #07c160;
+  border-radius: 10px;
+}
+.qr-preview-img {
+  width: 240px;
+  height: 240px;
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: default;
+  pointer-events: auto;
+}
+.qr-preview-tip {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #07c160;
+  text-align: center;
+}
+
+/* 下载二维码文字链接 */
+.download-qr-link {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: none;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: color .15s ease;
+  font-family: inherit;
+}
+.download-qr-link:hover { color: var(--primary); }
+.download-qr-link:active { color: var(--primary); }
+.download-qr-link.done { color: var(--primary); }
 
 .modal-btns {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -292,46 +339,6 @@ body { padding-bottom: 30px; }
 }
 .modal-btns .btn-outline { background: #f2f2f2; color: #555; }
 .modal-btns .btn-primary { background: var(--primary); color: #fff; }
-
-/* 微信内提示卡片 */
-.wechat-tip {
-  background: #f0fbf5;
-  border: 1px solid #c8e6c9;
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-top: 12px;
-  font-size: 13px;
-  line-height: 1.7;
-  color: #059a4c;
-}
-.wechat-tip .tip-title {
-  font-weight: 700;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.wechat-tip .tip-item {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  margin-top: 4px;
-  color: #2c6b3f;
-}
-.wechat-tip .tip-num {
-  flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #07c160;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2px;
-}
 
 .add-input, .add-select {
   width: 100%; height: 42px; border: 1px solid #ddd; border-radius: 9px;
@@ -379,7 +386,7 @@ body { padding-bottom: 30px; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* ========== 庆祝动画 ========== */
+/* 庆祝动画 */
 .celebrate-layer {
   position: fixed;
   inset: 0;
@@ -403,7 +410,6 @@ body { padding-bottom: 30px; }
   opacity: 0;
   visibility: hidden;
 }
-
 .confetti-rain {
   position: absolute;
   inset: 0;
@@ -436,7 +442,6 @@ body { padding-bottom: 30px; }
   10% { opacity: 1; }
   100% { opacity: 0.5; transform: translateY(110vh) scale(0.7); }
 }
-
 .celebrate-card {
   position: relative;
   z-index: 2;
@@ -462,7 +467,6 @@ body { padding-bottom: 30px; }
   transform: scale(0.7) translateY(10px);
   transition: opacity .3s ease, transform .3s ease;
 }
-
 .card-emoji {
   font-size: 68px;
   line-height: 1;
@@ -478,7 +482,6 @@ body { padding-bottom: 30px; }
   30% { transform: translateY(-8px) scale(1.08) rotate(-8deg); }
   60% { transform: translateY(-4px) scale(1.05) rotate(8deg); }
 }
-
 .card-title {
   font-size: 21px;
   font-weight: 800;
@@ -673,43 +676,51 @@ body { padding-bottom: 30px; }
     <div class="modal"><div class="modal-inner">
       <h3>分享采购清单</h3>
 
-      <!-- 微信内提示 -->
+      <!-- 微信内 -->
       <template v-if="isWeChat">
         <p class="hint" style="color:#07c160;font-weight:600">
-          微信内请按下面方式分享给家人
+          复制链接发给家人，或长按二维码保存
         </p>
-        <div id="qrcode" class="wechat-qr"></div>
-        <div class="wechat-tip">
-          <div class="tip-title">📱 分享方法</div>
-          <div class="tip-item">
-            <span class="tip-num">1</span>
-            <span><b>长按上方二维码</b> → 保存图片</span>
-          </div>
-          <div class="tip-item">
-            <span class="tip-num">2</span>
-            <span>把图片发给家人</span>
-          </div>
-          <div class="tip-item">
-            <span class="tip-num">3</span>
-            <span>家人<b>长按二维码 → 识别</b>即可打开清单</span>
-          </div>
+
+        <!-- 未生成时显示原二维码 canvas -->
+        <div v-show="!qrGenerated" id="qrcode" class="wechat-qr"></div>
+
+        <!-- 生成后显示大图，方便长按 -->
+        <div v-show="qrGenerated" class="qr-preview">
+          <img :src="qrImageUrl" alt="二维码" class="qr-preview-img">
+          <p class="qr-preview-tip">长按上方图片保存到相册</p>
         </div>
-        <div class="modal-btns" style="grid-template-columns:1fr">
-          <button class="btn btn-primary" @click="showShare = false">我知道了</button>
+
+        <button
+          v-show="!qrGenerated"
+          class="download-qr-link"
+          @click="downloadQR"
+        >
+          点击显示二维码图片
+        </button>
+
+        <textarea class="share-url" :value="shareUrl" readonly ref="shareUrlRef"></textarea>
+        <div class="modal-btns three">
+          <button class="btn btn-outline" @click="showShare = false">关闭</button>
+          <button class="btn btn-outline" @click="copyUrl(false)">复制链接</button>
+          <button class="btn btn-primary" @click="copyUrl(true)">复制并引导扫码</button>
         </div>
       </template>
 
-      <!-- 微信外：正常分享 -->
+      <!-- 微信外 -->
       <template v-else>
         <p class="hint">
           家人打开链接或扫码后，会进入<b>采购模式</b><br>
           看到精简的待办清单，可勾选已买到的食材
         </p>
         <div id="qrcode"></div>
+        <button class="download-qr-link" :class="{ done: qrDownloaded }" @click="downloadQR">
+          {{ qrDownloaded ? '✓ 已保存' : '点击下载二维码图片' }}
+        </button>
         <textarea class="share-url" :value="shareUrl" readonly ref="shareUrlRef"></textarea>
         <div class="modal-btns three">
           <button class="btn btn-outline" @click="showShare = false">关闭</button>
-          <button class="btn btn-outline" @click="copyUrl">复制链接</button>
+          <button class="btn btn-outline" @click="copyUrl(false)">复制链接</button>
           <button class="btn btn-primary" @click="nativeShare">分享</button>
         </div>
       </template>
@@ -861,12 +872,10 @@ const allItemsData = [
   {n:"豌豆",c:"其他",tag:"春",icon:"🫛"},{n:"蚕豆",c:"其他",tag:"春",icon:"🫛"},{n:"玉米粒",c:"其他",tag:"",icon:"🌽"}
 ];
 
-/* ==================== 环境检测 ==================== */
 function detectWeChat() {
   return /micromessenger/i.test(navigator.userAgent);
 }
 
-/* ==================== 应用 ==================== */
 createApp({
   setup() {
     const mode = ref('picker');
@@ -880,25 +889,26 @@ createApp({
     const shareUrl = ref('');
     const newItem = ref({ name: '', cat: '其他' });
 
-    // 环境
     const isWeChat = ref(detectWeChat());
 
-    // 划掉原因
     const showReason = ref(false);
     const reasonText = ref('');
     const reasonTargetIdx = ref(-1);
     const reasonInputRef = ref(null);
     const quickReasons = ['家里还有', '不太新鲜', '改买别的', '太贵了', '不需要'];
 
-    // 导出
     const showExport = ref(false);
     const exportText = ref('');
     const exportAreaRef = ref(null);
 
-    // 庆祝
     const showCelebrate = ref(false);
     const celebrateHiding = ref(false);
     let celebrateTimers = [];
+
+    // 二维码下载/预览状态
+    const qrDownloaded = ref(false);   // 微信外用：是否已下载
+    const qrGenerated = ref(false);    // 微信内用：是否已生成大图
+    const qrImageUrl = ref('');        // 微信内用：大图的 dataURL
 
     const toastShow = ref(false);
     const toastMsg = ref('');
@@ -1002,7 +1012,6 @@ createApp({
       if (!box) return;
       box.innerHTML = '';
       try {
-        // 微信内二维码更大一些，方便长按
         const size = wechatMode ? 240 : 180;
         new QRCode(box, {
           text: text,
@@ -1017,6 +1026,84 @@ createApp({
       }
     }
 
+    /* ---------- 下载/显示二维码 ---------- */
+    function downloadQR() {
+      const box = document.getElementById('qrcode');
+      if (!box) return;
+      const canvas = box.querySelector('canvas');
+      if (!canvas) {
+        const img = box.querySelector('img');
+        if (img && img.src) {
+          if (isWeChat.value) {
+            qrImageUrl.value = img.src;
+            qrGenerated.value = true;
+            showToast('长按图片保存');
+          } else {
+            triggerDownload(img.src, '买菜清单二维码.png');
+            qrDownloaded.value = true;
+            showToast('二维码已保存');
+          }
+          return;
+        }
+        showToast('二维码还没准备好');
+        return;
+      }
+
+      try {
+        // 加白底 padding，避免透明背景
+        const padding = 20;
+        const size = canvas.width;
+        const out = document.createElement('canvas');
+        out.width = size + padding * 2;
+        out.height = size + padding * 2;
+        const ctx = out.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, out.width, out.height);
+        ctx.drawImage(canvas, padding, padding);
+        const dataUrl = out.toDataURL('image/png');
+
+        if (isWeChat.value) {
+          // 微信内：显示为大图，引导长按保存
+          qrImageUrl.value = dataUrl;
+          qrGenerated.value = true;
+          showToast('长按图片保存到相册');
+        } else {
+          // 微信外：直接下载
+          triggerDownload(dataUrl, '买菜清单二维码.png');
+          qrDownloaded.value = true;
+          showToast('二维码已保存');
+        }
+      } catch (e) {
+        console.warn(e);
+        try {
+          const dataUrl = canvas.toDataURL('image/png');
+          if (isWeChat.value) {
+            qrImageUrl.value = dataUrl;
+            qrGenerated.value = true;
+            showToast('长按图片保存到相册');
+          } else {
+            triggerDownload(dataUrl, '买菜清单二维码.png');
+            qrDownloaded.value = true;
+            showToast('二维码已保存');
+          }
+        } catch (e2) {
+          showToast('保存失败，请长按二维码保存');
+        }
+      }
+    }
+
+    function triggerDownload(dataUrl, filename) {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+      }, 100);
+    }
+
     /* ---------- 分享 ---------- */
     function openShare() {
       const sel = Object.entries(state.value).filter(([, s]) => s.on);
@@ -1026,36 +1113,41 @@ createApp({
       const data = encodeURIComponent(JSON.stringify(compact));
       const base = location.origin + location.pathname;
       shareUrl.value = base + '#list=' + data;
+
+      // 重置状态
+      qrDownloaded.value = false;
+      qrGenerated.value = false;
+      qrImageUrl.value = '';
       showShare.value = true;
 
       nextTick(() => {
-        // 微信内二维码加大，并在外围加虚线框
         generateQR(shareUrl.value, isWeChat.value);
       });
     }
 
-    // 复制链接（含微信降级）
-    function copyUrl() {
+    function copyUrl(guide) {
       const text = shareUrl.value;
       if (!text) return;
 
-      // 微信内：直接走 input + execCommand
+      const done = () => {
+        showToast(guide ? '已复制，粘贴给家人或让家人扫码' : '链接已复制');
+      };
+
       if (isWeChat.value) {
-        fallbackCopy(text);
+        fallbackCopy(text, done);
         return;
       }
 
-      // 非微信：优先用 navigator.clipboard
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text)
-          .then(() => showToast('链接已复制'))
-          .catch(() => fallbackCopy(text));
+        navigator.clipboard.writeText(text).then(done).catch(() => {
+          fallbackCopy(text, done);
+        });
       } else {
-        fallbackCopy(text);
+        fallbackCopy(text, done);
       }
     }
 
-    function fallbackCopy(text) {
+    function fallbackCopy(text, done) {
       try {
         const ta = document.createElement('textarea');
         ta.value = text;
@@ -1069,10 +1161,13 @@ createApp({
         ta.setSelectionRange(0, text.length);
         const ok = document.execCommand('copy');
         document.body.removeChild(ta);
-        if (ok) showToast('链接已复制');
-        else showToast('复制失败，请长按二维码保存');
+        if (ok) {
+          (done || (() => showToast('链接已复制')))();
+        } else {
+          showToast('复制失败，请长按上方链接手动复制');
+        }
       } catch (e) {
-        showToast('复制失败，请长按二维码保存');
+        showToast('复制失败，请长按上方链接手动复制');
       }
     }
 
@@ -1084,7 +1179,7 @@ createApp({
           url: shareUrl.value
         }).catch(() => {});
       } else {
-        copyUrl();
+        copyUrl(false);
       }
     }
 
@@ -1161,7 +1256,7 @@ createApp({
       saveShopperProgress();
     }
 
-    /* ---------- 庆祝动画 ---------- */
+    /* ---------- 庆祝 ---------- */
     function checkAllDone() {
       if (activeCount.value > 0 && doneCount.value === activeCount.value) {
         triggerCelebrate();
@@ -1305,7 +1400,6 @@ createApp({
 
       const done = () => showToast('已复制，快去分享吧');
 
-      // 微信内：直接走 textarea + execCommand
       if (isWeChat.value) {
         fallbackCopyExport(text, done);
         return;
@@ -1446,11 +1540,12 @@ createApp({
       showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
       showExport, exportText, exportAreaRef,
       showCelebrate, celebrateHiding,
+      qrDownloaded, qrGenerated, qrImageUrl,
       cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
       progressPercent, allDone,
       toggleItem, changeQty, updateNote,
       selectAll, clearAll, doAdd,
-      openShare, copyUrl, nativeShare,
+      openShare, copyUrl, nativeShare, downloadQR,
       toggleDone, toggleStrike, toggleAllDone, resetProgress, backToPicker,
       confirmReason, cancelReason,
       openExport, resetExportText, copyExport,
