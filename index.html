@@ -270,11 +270,34 @@ body { padding-bottom: 30px; }
   width: 100%; min-height: 64px; padding: 10px;
   border: 1px solid #ddd; border-radius: 10px;
   font-size: 12px; resize: vertical; margin-top: 12px;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  background: #fafafa;
 }
 #qrcode {
   display: flex; justify-content: center; padding: 12px;
   background: #fafafa; border-radius: 10px; min-height: 200px;
 }
+/* 短链状态提示 */
+.short-status {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  min-height: 18px;
+}
+.short-status .loading {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border: 2px solid #ddd;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .modal-btns {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px; margin-top: 14px;
@@ -455,7 +478,6 @@ body { padding-bottom: 30px; }
           <div class="todo-body">
             <div class="todo-name">{{ item.name }}</div>
             <div class="todo-note" v-if="item.note">{{ item.note }}</div>
-            <!-- 划掉原因 -->
             <div class="todo-reason" v-if="item.struck && item.reason">
               ❌ {{ item.reason }}
             </div>
@@ -463,7 +485,6 @@ body { padding-bottom: 30px; }
           <div class="todo-qty" :class="{ plus: item.qty > 1 }" v-if="item.qty > 1">
             ×{{ item.qty }}
           </div>
-          <!-- 删减按钮 -->
           <button
             class="todo-strike"
             @click.stop="toggleStrike(idx)"
@@ -494,6 +515,17 @@ body { padding-bottom: 30px; }
         看到精简的待办清单，可勾选已买到的食材
       </p>
       <div id="qrcode"></div>
+      <div class="short-status">
+        <span v-if="shortUrlLoading">
+          <span class="loading"></span>正在生成短链...
+        </span>
+        <span v-else-if="shortUrlReady" style="color:var(--primary)">
+          ✓ 已生成短链
+        </span>
+        <span v-else-if="shortUrlFailed" style="color:#ff9500">
+          短链生成失败，使用原始链接
+        </span>
+      </div>
       <textarea class="share-url" :value="shareUrl" readonly ref="shareUrlRef"></textarea>
       <div class="modal-btns three">
         <button class="btn btn-outline" @click="showShare = false">关闭</button>
@@ -634,6 +666,27 @@ const allItemsData = [
   {n:"豌豆",c:"其他",tag:"春",icon:"🫛"},{n:"蚕豆",c:"其他",tag:"春",icon:"🫛"},{n:"玉米粒",c:"其他",tag:"",icon:"🌽"}
 ];
 
+/* ==================== 短链服务 ==================== */
+// is.gd 免费短链 API，不需要 key
+async function shortenUrl(longUrl, timeoutMs = 6000) {
+  // 用 Promise.race 做超时控制
+  const fetchTask = (async () => {
+    const api = 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
+    const res = await fetch(api, { method: 'GET' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.shorturl) return data.shorturl;
+    if (data.errormessage) throw new Error(data.errormessage);
+    throw new Error('no shorturl');
+  })();
+
+  const timeoutTask = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), timeoutMs)
+  );
+
+  return Promise.race([fetchTask, timeoutTask]);
+}
+
 /* ==================== 应用 ==================== */
 createApp({
   setup() {
@@ -648,6 +701,12 @@ createApp({
     const showRoleSwitch = ref(false);
     const shareUrl = ref('');
     const newItem = ref({ name: '', cat: '其他' });
+
+    // 短链状态
+    const shortUrlLoading = ref(false);
+    const shortUrlReady = ref(false);
+    const shortUrlFailed = ref(false);
+    let shareRequestId = 0;  // 防止旧请求覆盖新弹窗
 
     // 划掉原因
     const showReason = ref(false);
@@ -716,7 +775,6 @@ createApp({
       state.value[name].on = !state.value[name].on;
     }
 
-    /* ---------- 挑菜：数量加减 ---------- */
     function changeQty(name, delta) {
       if (!state.value[name]) {
         state.value[name] = { on: true, q: 1, note: '' };
@@ -726,7 +784,6 @@ createApp({
       state.value[name].on = true;
     }
 
-    /* ---------- 挑菜：备注 ---------- */
     function updateNote(name, val) {
       if (!state.value[name]) {
         state.value[name] = { on: true, q: 1, note: '' };
@@ -735,7 +792,6 @@ createApp({
       state.value[name].on = true;
     }
 
-    /* ---------- 挑菜：全选/清空 ---------- */
     function selectAll() {
       allItems.value.forEach(i => {
         if (!state.value[i.n]) state.value[i.n] = { on: true, q: 1, note: '' };
@@ -749,7 +805,6 @@ createApp({
       showToast('已清空');
     }
 
-    /* ---------- 挑菜：添加自选 ---------- */
     function doAdd() {
       const n = newItem.value.name.trim();
       if (!n) { showToast('请输入食材名称'); return; }
@@ -762,32 +817,74 @@ createApp({
       showToast('已添加');
     }
 
-    /* ---------- 挑菜：生成分享链接 ---------- */
-    function openShare() {
+    /* ---------- 生成二维码 ---------- */
+    function generateQR(text) {
+      const box = document.getElementById('qrcode');
+      if (!box) return;
+      box.innerHTML = '';
+      try {
+        new QRCode(box, {
+          text: text,
+          width: 180, height: 180,
+          colorDark: '#000', colorLight: '#fff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        box.innerHTML = '<div style="color:#aaa;font-size:12px;padding:20px">二维码生成失败，请用下方链接</div>';
+      }
+    }
+
+    /* ---------- 分享（含短链） ---------- */
+    async function openShare() {
       const sel = Object.entries(state.value).filter(([, s]) => s.on);
       if (!sel.length) { showToast('还没有选择任何食材'); return; }
 
+      // 生成长链接
       const compact = sel.map(([k, s]) => [k, s.q || 1, s.note || '']);
       const data = encodeURIComponent(JSON.stringify(compact));
       const base = location.origin + location.pathname;
-      shareUrl.value = base + '#list=' + data;
-      showShare.value = true;
+      const longUrl = base + '#list=' + data;
 
+      // 立即显示弹窗（先用长链接占位）
+      shareUrl.value = longUrl;
+      showShare.value = true;
+      shortUrlLoading.value = true;
+      shortUrlReady.value = false;
+      shortUrlFailed.value = false;
+
+      // 二维码先用长链接生成，保证立刻有东西看
       nextTick(() => {
-        const box = document.getElementById('qrcode');
-        if (!box) return;
-        box.innerHTML = '';
-        try {
-          new QRCode(box, {
-            text: shareUrl.value,
-            width: 180, height: 180,
-            colorDark: '#000', colorLight: '#fff',
-            correctLevel: QRCode.CorrectLevel.M
-          });
-        } catch (e) {
-          box.innerHTML = '<div style="color:#aaa;font-size:12px;padding:20px">二维码生成失败，请用下方链接</div>';
-        }
+        generateQR(longUrl);
       });
+
+      // 标记本次请求，防止旧请求覆盖新弹窗
+      const myReqId = ++shareRequestId;
+
+      // 后台请求短链
+      try {
+        const short = await shortenUrl(longUrl);
+        if (myReqId !== shareRequestId) return;  // 已被新请求取代
+
+        if (short && short !== longUrl) {
+          shareUrl.value = short;
+          shortUrlReady.value = true;
+          shortUrlFailed.value = false;
+          // 二维码重新生成（短链）
+          nextTick(() => { generateQR(short); });
+        } else {
+          shortUrlFailed.value = true;
+        }
+      } catch (e) {
+        console.warn('短链生成失败', e);
+        if (myReqId === shareRequestId) {
+          shortUrlFailed.value = true;
+          // 保留长链接，二维码不变
+        }
+      } finally {
+        if (myReqId === shareRequestId) {
+          shortUrlLoading.value = false;
+        }
+      }
     }
 
     function copyUrl() {
@@ -1080,6 +1177,7 @@ createApp({
     return {
       mode, allItems, state, todoList, currentCat,
       showShare, showAdd, showRoleSwitch, shareUrl, newItem,
+      shortUrlLoading, shortUrlReady, shortUrlFailed,
       showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
       showExport, exportText, exportAreaRef,
       cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
