@@ -77,18 +77,35 @@ body { padding-bottom: 30px; }
   padding-top: 190px;
 }
 .card {
-  position: relative; min-height: 104px; padding: 10px 8px 12px;
+  position: relative; min-height: 132px; padding: 10px 8px 12px;
   background: #fff; border: 2px solid transparent; border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0,0,0,.05);
   transition: border-color .2s ease, background-color .2s ease;
 }
 .card.checked { border-color: var(--primary); background: var(--primary-light); }
 .card-icon {
-  height: 44px; margin-bottom: 4px;
+  height: 64px; margin-bottom: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 30px;
+  font-size: 40px;
 }
-.card-name { font-size: 14px; font-weight: 600; text-align: center; line-height: 1.3; }
+.card-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  background: #f0f0f0;
+  cursor: zoom-in;
+  transition: transform .15s ease;
+}
+.card-img:active { transform: scale(.95); }
+.card-name {
+  font-size: 14px; font-weight: 600; text-align: center; line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
 .card-meta { margin-top: 2px; font-size: 11px; text-align: center; color: var(--muted); }
 .card-badge {
   position: absolute; top: 6px; left: 6px; padding: 1px 6px;
@@ -183,6 +200,23 @@ body { padding-bottom: 30px; }
 }
 .todo-qty.plus { background: #e8f8ef; color: var(--primary); }
 
+/* 采购模式：小眼睛预览按钮 */
+.todo-eye {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f0f7ff;
+  color: #007aff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  font-size: 16px;
+  padding: 0;
+  margin-left: 2px;
+}
+.todo-eye:active { transform: scale(.9); background: #e0efff; }
+
 .todo-strike {
   flex-shrink: 0;
   width: 28px; height: 28px;
@@ -269,7 +303,6 @@ body { padding-bottom: 30px; }
   background: #fafafa; border-radius: 10px; min-height: 200px;
 }
 
-/* 二维码预览大图（微信内长按保存） */
 .qr-preview {
   display: flex;
   flex-direction: column;
@@ -296,7 +329,6 @@ body { padding-bottom: 30px; }
   text-align: center;
 }
 
-/* 下载二维码文字链接 */
 .download-qr-link {
   display: block;
   width: 100%;
@@ -377,7 +409,107 @@ body { padding-bottom: 30px; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* 庆祝动画 */
+/* ========== 图片放大预览层 ========== */
+.img-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 30px 20px;
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.img-viewer.show {
+  display: flex;
+  opacity: 1;
+}
+.img-viewer-content {
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.img-viewer-img {
+  max-width: 90vw;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  transform: scale(0.85);
+  transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+.img-viewer.show .img-viewer-img {
+  transform: scale(1);
+}
+.img-viewer-title {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0,0,0,.5);
+  text-align: center;
+}
+.img-viewer-close {
+  position: absolute;
+  top: calc(20px + env(safe-area-inset-top));
+  right: 20px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.img-viewer-close:active { background: rgba(255,255,255,.3); }
+
+/* 采购模式：预览网格 */
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+.preview-grid-item {
+  background: #fafafa;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: transform .15s ease;
+}
+.preview-grid-item:active { transform: scale(.97); }
+.preview-grid-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  background: #eee;
+}
+.preview-grid-name {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  padding: 6px 4px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .celebrate-layer {
   position: fixed;
   inset: 0;
@@ -551,11 +683,12 @@ body { padding-bottom: 30px; }
       <button class="btn btn-outline" @click="showAdd = true">＋ 自选</button>
       <button class="btn btn-primary" @click="openShare">🔗 分享</button>
     </div>
-    <div class="top-actions three" v-else>
+    <div class="top-actions" v-else style="grid-template-columns:repeat(4,1fr)">
       <button class="btn btn-outline" @click="toggleAllDone">
-        {{ allDone ? '全部取消' : '全部买齐' }}
+        {{ allDone ? '取消' : '买齐' }}
       </button>
-      <button class="btn btn-outline" @click="resetProgress">重置勾选</button>
+      <button class="btn btn-outline" @click="resetProgress">重置</button>
+      <button class="btn btn-outline" @click="openPreview">👁 预览</button>
       <button class="btn btn-primary" @click="openExport">📋 导出</button>
     </div>
   </div>
@@ -579,7 +712,18 @@ body { padding-bottom: 30px; }
         :class="{ checked: state[item.n] && state[item.n].on }"
         @click="toggleItem(item.n)"
       >
-        <div class="card-icon">{{ item.icon || '🥬' }}</div>
+        <div class="card-icon">
+          <img
+            v-if="item.img && !failedImgs[item.n]"
+            :src="item.img"
+            :alt="item.n"
+            class="card-img"
+            loading="lazy"
+            @error="onImgError(item)"
+            @click.stop="openImgViewer(item)"
+          >
+          <span v-else>{{ item.icon || '🥬' }}</span>
+        </div>
         <div class="card-name">{{ item.n }}</div>
         <div class="card-meta">{{ item.c }}</div>
         <span v-if="item.c === '肉类'" class="card-badge badge-meat">肉</span>
@@ -641,6 +785,13 @@ body { padding-bottom: 30px; }
           <div class="todo-qty" :class="{ plus: item.qty > 1 }" v-if="item.qty > 1">
             ×{{ item.qty }}
           </div>
+          <!-- 预览按钮：只有该食材有图才显示 -->
+          <button
+            v-if="getItemImage(item.name)"
+            class="todo-eye"
+            @click.stop="openImgViewerByName(item.name)"
+            title="预览图片"
+          >👁</button>
           <button
             class="todo-strike"
             @click.stop="toggleStrike(idx)"
@@ -657,7 +808,7 @@ body { padding-bottom: 30px; }
       </div>
 
       <div class="footer" v-if="todoList.length">
-        {{ allDone ? '🎉 全部买齐了！' : '点击条目勾选已购买的食材 · 右侧按钮可划掉' }}
+        {{ allDone ? '🎉 全部买齐了！' : '点击条目勾选 · 眼睛可预览图片 · 右侧按钮可划掉' }}
       </div>
     </div>
   </template>
@@ -667,7 +818,6 @@ body { padding-bottom: 30px; }
     <div class="modal"><div class="modal-inner">
       <h3>分享采购清单</h3>
 
-      <!-- 微信内：直接显示大图 -->
       <template v-if="isWeChat">
         <p class="hint" style="color:#07c160;font-weight:600">
           复制链接发给家人，或长按二维码保存
@@ -688,7 +838,6 @@ body { padding-bottom: 30px; }
         </div>
       </template>
 
-      <!-- 微信外：保留原生分享 -->
       <template v-else>
         <p class="hint">
           家人打开链接或扫码后，会进入<b>采购模式</b><br>
@@ -752,6 +901,42 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
+  <!-- 采购模式：图片预览网格弹窗 -->
+  <div class="modal-mask" :class="{ show: showPreview }" @click.self="showPreview = false">
+    <div class="modal"><div class="modal-inner">
+      <h3>采购食材图片参考</h3>
+      <p class="hint">
+        点击任意图片可放大查看<br>
+        共 {{ previewItems.length }} 项有图
+      </p>
+      <div class="preview-grid" v-if="previewItems.length">
+        <div
+          v-for="p in previewItems"
+          :key="p.n"
+          class="preview-grid-item"
+          @click="openImgViewer(p)"
+        >
+          <img
+            :src="p.img"
+            :alt="p.n"
+            class="preview-grid-img"
+            loading="lazy"
+            @error="onImgError(p)"
+          >
+          <div class="preview-grid-name">{{ p.n }}</div>
+        </div>
+      </div>
+      <div v-else style="text-align:center;color:#bbb;padding:30px 0;font-size:14px">
+        暂无带图片的食材
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-primary" @click="showPreview = false" style="grid-column: span 2">
+          关闭
+        </button>
+      </div>
+    </div></div>
+  </div>
+
   <!-- 导出采购情况 -->
   <div class="modal-mask" :class="{ show: showExport }" @click.self="showExport = false">
     <div class="modal"><div class="modal-inner">
@@ -798,59 +983,172 @@ body { padding-bottom: 30px; }
     </div>
   </div>
 
+  <!-- 图片放大预览层 -->
+  <div class="img-viewer" :class="{ show: imgViewer.show }" @click="closeImgViewer">
+    <button class="img-viewer-close" @click.stop="closeImgViewer">✕</button>
+    <div class="img-viewer-content" @click.stop>
+      <img v-if="imgViewer.src" :src="imgViewer.src" :alt="imgViewer.name" class="img-viewer-img">
+      <div class="img-viewer-title" v-if="imgViewer.name">{{ imgViewer.name }}</div>
+    </div>
+  </div>
+
   <div class="toast" :class="{ show: toastShow }">{{ toastMsg }}</div>
 </div>
 
 <script>
 const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
 
-/* ==================== 食材数据 ==================== */
+/* ==================== 食材数据（带真实图片） ==================== */
 const allItemsData = [
-  {n:"菠菜",c:"叶菜",tag:"",icon:"🥬"},{n:"油麦菜",c:"叶菜",tag:"",icon:"🥬"},{n:"空心菜",c:"叶菜",tag:"夏",icon:"🥬"},
-  {n:"苋菜",c:"叶菜",tag:"夏",icon:"🥬"},{n:"茼蒿",c:"叶菜",tag:"冬春",icon:"🥬"},{n:"韭菜",c:"叶菜",tag:"",icon:"🥬"},
-  {n:"香菜",c:"叶菜",tag:"",icon:"🌿"},{n:"小白菜",c:"叶菜",tag:"",icon:"🥬"},{n:"生菜",c:"叶菜",tag:"",icon:"🥬"},
-  {n:"芹菜",c:"叶菜",tag:"",icon:"🥬"},{n:"芥蓝",c:"叶菜",tag:"",icon:"🥬"},{n:"菜心",c:"叶菜",tag:"",icon:"🥬"},
-  {n:"上海青",c:"叶菜",tag:"",icon:"🥬"},{n:"鸡毛菜",c:"叶菜",tag:"",icon:"🥬"},{n:"木耳菜",c:"叶菜",tag:"夏",icon:"🥬"},
-  {n:"红薯叶",c:"叶菜",tag:"夏",icon:"🥬"},{n:"苦苣",c:"叶菜",tag:"",icon:"🥬"},{n:"芝麻菜",c:"叶菜",tag:"",icon:"🥬"},
-  {n:"土豆",c:"根茎",tag:"",icon:"🥔"},{n:"胡萝卜",c:"根茎",tag:"",icon:"🥕"},{n:"白萝卜",c:"根茎",tag:"冬",icon:"🫚"},
-  {n:"洋葱",c:"根茎",tag:"",icon:"🧅"},{n:"大蒜",c:"根茎",tag:"",icon:"🧄"},{n:"生姜",c:"根茎",tag:"",icon:"🫚"},
-  {n:"山药",c:"根茎",tag:"秋冬",icon:"🫚"},{n:"莲藕",c:"根茎",tag:"秋",icon:"🫚"},{n:"芋头",c:"根茎",tag:"秋",icon:"🫚"},
-  {n:"红薯",c:"根茎",tag:"秋冬",icon:"🍠"},{n:"紫薯",c:"根茎",tag:"秋冬",icon:"🍠"},{n:"莴笋",c:"根茎",tag:"春",icon:"🫚"},
-  {n:"茭白",c:"根茎",tag:"夏",icon:"🫚"},{n:"芦笋",c:"根茎",tag:"春",icon:"🫚"},{n:"荸荠",c:"根茎",tag:"冬",icon:"🫚"},
-  {n:"牛蒡",c:"根茎",tag:"",icon:"🫚"},{n:"芥菜头",c:"根茎",tag:"",icon:"🫚"},
-  {n:"番茄",c:"瓜果",tag:"",icon:"🍅"},{n:"黄瓜",c:"瓜果",tag:"夏",icon:"🥒"},{n:"青椒",c:"瓜果",tag:"",icon:"🫑"},
-  {n:"茄子",c:"瓜果",tag:"夏",icon:"🍆"},{n:"冬瓜",c:"瓜果",tag:"夏",icon:"🍈"},{n:"南瓜",c:"瓜果",tag:"秋",icon:"🎃"},
-  {n:"丝瓜",c:"瓜果",tag:"夏",icon:"🥒"},{n:"苦瓜",c:"瓜果",tag:"夏",icon:"🥒"},{n:"西葫芦",c:"瓜果",tag:"夏",icon:"🥒"},
-  {n:"豆角",c:"瓜果",tag:"夏",icon:"🫘"},{n:"四季豆",c:"瓜果",tag:"夏",icon:"🫘"},{n:"荷兰豆",c:"瓜果",tag:"冬春",icon:"🫘"},
-  {n:"玉米",c:"瓜果",tag:"夏",icon:"🌽"},{n:"秋葵",c:"瓜果",tag:"夏",icon:"🫛"},{n:"辣椒",c:"瓜果",tag:"",icon:"🌶️"},
-  {n:"彩椒",c:"瓜果",tag:"",icon:"🫑"},{n:"佛手瓜",c:"瓜果",tag:"",icon:"🥒"},
-  {n:"香菇",c:"菌菇",tag:"",icon:"🍄"},{n:"平菇",c:"菌菇",tag:"",icon:"🍄"},{n:"金针菇",c:"菌菇",tag:"",icon:"🍄"},
-  {n:"口蘑",c:"菌菇",tag:"",icon:"🍄"},{n:"杏鲍菇",c:"菌菇",tag:"",icon:"🍄"},{n:"海鲜菇",c:"菌菇",tag:"",icon:"🍄"},
-  {n:"蟹味菇",c:"菌菇",tag:"",icon:"🍄"},{n:"白玉菇",c:"菌菇",tag:"",icon:"🍄"},{n:"木耳",c:"菌菇",tag:"",icon:"🍄"},
-  {n:"银耳",c:"菌菇",tag:"",icon:"🍄"},{n:"虫草花",c:"菌菇",tag:"",icon:"🍄"},
-  {n:"豆腐",c:"豆制品",tag:"",icon:"🧊"},{n:"老豆腐",c:"豆制品",tag:"",icon:"🧊"},{n:"嫩豆腐",c:"豆制品",tag:"",icon:"🧊"},
-  {n:"豆皮",c:"豆制品",tag:"",icon:"🫘"},{n:"腐竹",c:"豆制品",tag:"",icon:"🫘"},{n:"豆干",c:"豆制品",tag:"",icon:"🧊"},
-  {n:"千张",c:"豆制品",tag:"",icon:"🫘"},{n:"素鸡",c:"豆制品",tag:"",icon:"🧊"},
-  {n:"葱",c:"调味",tag:"",icon:"🌰"},{n:"姜",c:"调味",tag:"",icon:"🫚"},{n:"蒜",c:"调味",tag:"",icon:"🧄"},
-  {n:"干辣椒",c:"调味",tag:"",icon:"🌶️"},{n:"花椒",c:"调味",tag:"",icon:"🌰"},{n:"八角",c:"调味",tag:"",icon:"🌰"},
-  {n:"香叶",c:"调味",tag:"",icon:"🌿"},{n:"桂皮",c:"调味",tag:"",icon:"🌰"},{n:"料酒",c:"调味",tag:"",icon:"🍶"},
-  {n:"生抽",c:"调味",tag:"",icon:"🍶"},{n:"老抽",c:"调味",tag:"",icon:"🍶"},{n:"蚝油",c:"调味",tag:"",icon:"🍶"},
-  {n:"醋",c:"调味",tag:"",icon:"🍶"},{n:"香油",c:"调味",tag:"",icon:"🍶"},{n:"豆瓣酱",c:"调味",tag:"",icon:"🍶"},
-  {n:"五花肉",c:"肉类",tag:"",icon:"🥩"},{n:"里脊肉",c:"肉类",tag:"",icon:"🥩"},{n:"排骨",c:"肉类",tag:"",icon:"🍖"},
-  {n:"鸡腿肉",c:"肉类",tag:"",icon:"🍗"},{n:"鸡胸肉",c:"肉类",tag:"",icon:"🍗"},{n:"牛肉",c:"肉类",tag:"",icon:"🥩"},
-  {n:"牛腩",c:"肉类",tag:"",icon:"🥩"},{n:"羊肉",c:"肉类",tag:"冬",icon:"🥩"},{n:"猪蹄",c:"肉类",tag:"",icon:"🍖"},
-  {n:"鸡翅",c:"肉类",tag:"",icon:"🍗"},{n:"鸡爪",c:"肉类",tag:"",icon:"🍗"},{n:"鸭肉",c:"肉类",tag:"",icon:"🦆"},
-  {n:"鸭翅",c:"肉类",tag:"",icon:"🦆"},{n:"培根",c:"肉类",tag:"",icon:"🥓"},{n:"火腿",c:"肉类",tag:"",icon:"🥓"},
-  {n:"腊肉",c:"肉类",tag:"冬",icon:"🥓"},{n:"香肠",c:"肉类",tag:"",icon:"🌭"},
-  {n:"鲫鱼",c:"水产",tag:"",icon:"🐟"},{n:"草鱼",c:"水产",tag:"",icon:"🐟"},{n:"鲈鱼",c:"水产",tag:"",icon:"🐟"},
-  {n:"带鱼",c:"水产",tag:"",icon:"🐟"},{n:"虾",c:"水产",tag:"",icon:"🦐"},{n:"基围虾",c:"水产",tag:"",icon:"🦐"},
-  {n:"螃蟹",c:"水产",tag:"秋",icon:"🦀"},{n:"花蛤",c:"水产",tag:"",icon:"🐚"},{n:"蛏子",c:"水产",tag:"",icon:"🐚"},
-  {n:"鱿鱼",c:"水产",tag:"",icon:"🦑"},{n:"墨鱼",c:"水产",tag:"",icon:"🦑"},{n:"生蚝",c:"水产",tag:"",icon:"🦪"},
-  {n:"鸡蛋",c:"蛋禽",tag:"",icon:"🥚"},{n:"鸭蛋",c:"蛋禽",tag:"",icon:"🥚"},{n:"鹌鹑蛋",c:"蛋禽",tag:"",icon:"🥚"},
-  {n:"皮蛋",c:"蛋禽",tag:"",icon:"🥚"},{n:"咸鸭蛋",c:"蛋禽",tag:"",icon:"🥚"},
-  {n:"海带",c:"其他",tag:"",icon:"🌊"},{n:"紫菜",c:"其他",tag:"",icon:"🌊"},{n:"花生",c:"其他",tag:"",icon:"🥜"},
-  {n:"板栗",c:"其他",tag:"秋",icon:"🌰"},{n:"西兰花",c:"其他",tag:"",icon:"🥦"},{n:"花菜",c:"其他",tag:"",icon:"🥦"},
-  {n:"豌豆",c:"其他",tag:"春",icon:"🫛"},{n:"蚕豆",c:"其他",tag:"春",icon:"🫛"},{n:"玉米粒",c:"其他",tag:"",icon:"🌽"}
+  // ============ 叶菜 ============
+  { n: "菠菜", c: "叶菜", tag: "", icon: "🥬", img: "https://ts2.tc.mm.bing.net/th/id/ODL.9b1c571cff74299398e0c193b91b867d?w=310&h=198&c=7&rs=1&bgcl=fffffe&r=0&o=6&dpr=1.1&pid=AlgoBlockDebug" },
+  { n: "油麦菜", c: "叶菜", tag: "", icon: "🥬", img: "https://ts2.tc.mm.bing.net/th/id/ODL.3aa3cc9b665a92ac86de68631cb0c4b9?w=310&h=198&c=7&rs=1&bgcl=fffffe&r=0&o=6&dpr=1.1&pid=AlgoBlockDebug" },
+  { n: "空心菜", c: "叶菜", tag: "夏", icon: "🥬", img: "https://ts1.tc.mm.bing.net/th/id/R-C.3cd1dc2e3ad2a7c1be55188fbf45cc9f?rik=3fycjdnw7KsERw&riu=http%3a%2f%2fk.sinaimg.cn%2fn%2ffront%2f112%2fw507h405%2f20190408%2fS5Nc-hvhrcxn0826268.jpg%2fw700d1q75cms.jpg&ehk=m%2f%2bt4t1m4699DiIqz%2fgS8EaoPsxC6PZ6vsyvRSyJRAE%3d&risl=&pid=ImgRaw&r=0" },
+  { n: "苋菜", c: "叶菜", tag: "夏", icon: "🥬", img: "https://bkwikiflow.bj.bcebos.com/loc-index/d5119c775d30a0f96f3f095b09d1265f/cb244cc649da4307a9d3e714c7a28916/1782718395/%E5%B8%B8%E8%A7%81%E8%8B%8B%E7%89%B9%E7%82%B9%E5%8F%8A%E5%8C%BA%E5%88%AB/%E8%8B%8B/%E5%A4%A7%E5%9C%86%E5%8F%B6%E7%BA%A2%E8%8B%8B%E8%8F%9C.webp" },
+  { n: "茼蒿", c: "叶菜", tag: "冬春", icon: "🥬", img: "https://bkimg.cdn.bcebos.com/pic/42a98226cffc1e178a8271c56ac7e103738da87743b5?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080" },
+  { n: "韭菜", c: "叶菜", tag: "", icon: "🥬", img: "https://bkimg.cdn.bcebos.com/pic/c8ea15ce36d3d539b600beda87d1fe50352ac65c1a29?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080" },
+  { n: "香菜", c: "叶菜", tag: "", icon: "🌿", img: "https://bkimg.cdn.bcebos.com/pic/c9fcc3cec3fdfc03924522626b699094a4c27c1e88e8?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080" },
+  { n: "小白菜", c: "叶菜", tag: "", icon: "🥬", img: "https://bkimg.cdn.bcebos.com/pic/9f2f070828381f30e924ffb313575b086e061d955a28?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080" },
+  { n: "黄心大白菜", c: "叶菜", tag: "", icon: "🥬", img: "https://bkwikiflow.bj.bcebos.com/loc-index/36e5c995e8cf1ae7e58a83ec36a74c92/05c35b4637c44ac09f1fbd34c9eae64d/1782728001/%E5%B8%B8%E8%A7%81%E5%B0%8F%E7%99%BD%E8%8F%9C%E7%89%B9%E7%82%B9%E5%8F%8A%E5%8C%BA%E5%88%AB/%E5%B0%8F%E7%99%BD%E8%8F%9C/%E9%BB%84%E5%BF%83%E5%A4%A7%E7%99%BD%E8%8F%9C.webp" },
+  { n: "生菜", c: "叶菜", tag: "", icon: "🥬", img: "https://materials.cdn.bcebos.com/images/33497614/78785f68748a241c2ef30ebb171f75eb.jpeg" },
+  { n: "芹菜", c: "叶菜", tag: "", icon: "🥬", img: "https://bkimg.cdn.bcebos.com/smart/dcc451da81cb39dbb6fdd89ce74c1e24ab18962b9afd-bkimg-process,v_1,rw_1023,rh_682,maxl_426?x-bce-process=image/format,f_auto" },
+  { n: "芥蓝", c: "叶菜", tag: "", icon: "🥬", img: "https://p1.ssl.qhimg.com/t0136a330583126d897.jpg" },
+  { n: "菜心", c: "叶菜", tag: "", icon: "🥬", img: "https://pic.nximg.cn/file/20230305/26853825_144601708101_2.jpg" },
+  { n: "上海青", c: "叶菜", tag: "", icon: "🥬", img: "https://bkimg.cdn.bcebos.com/pic/aec379310a55b319ebc4332e1df09526cffc1e17b96d?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080" },
+  { n: "鸡毛菜", c: "叶菜", tag: "", icon: "🥬", img: "https://ts3.tc.mm.bing.net/th/id/ODL.2d316886a223989910783e3303e7f6d3?w=310&h=198&c=7&rs=1&bgcl=fffffe&r=0&o=6&dpr=1.1&pid=AlgoBlockDebug" },
+  { n: "木耳菜", c: "叶菜", tag: "夏", icon: "🥬", img: "https://ts1.tc.mm.bing.net/th/id/OIP-C.-sl0uR5chFHcZD_GIOa3GQHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3" },
+  { n: "红薯叶", c: "叶菜", tag: "夏", icon: "🥬", img: "https://materials.cdn.bcebos.com/images/9080469/0fb8395dd078c1099780c21fe27d69f9.jpeg" },
+  { n: "苦苣", c: "叶菜", tag: "", icon: "🥬", img: "https://pic.nximg.cn/file/20230512/29159477_151105055107_2.jpg" },
+  { n: "芝麻菜", c: "叶菜", tag: "", icon: "🥬", img: "https://pic2.zhimg.com/v2-0a6868c474171620e7a41c51d621a28a_r.jpg" },
+
+  // ============ 根茎 ============
+  { n: "土豆", c: "根茎", tag: "", icon: "🥔", img: "" },
+  { n: "胡萝卜", c: "根茎", tag: "", icon: "🥕", img: "" },
+  { n: "白萝卜", c: "根茎", tag: "冬", icon: "🫚", img: "" },
+  { n: "洋葱", c: "根茎", tag: "", icon: "🧅", img: "" },
+  { n: "大蒜", c: "根茎", tag: "", icon: "🧄", img: "" },
+  { n: "生姜", c: "根茎", tag: "", icon: "🫚", img: "" },
+  { n: "山药", c: "根茎", tag: "秋冬", icon: "🫚", img: "" },
+  { n: "莲藕", c: "根茎", tag: "秋", icon: "🫚", img: "" },
+  { n: "芋头", c: "根茎", tag: "秋", icon: "🫚", img: "" },
+  { n: "红薯", c: "根茎", tag: "秋冬", icon: "🍠", img: "" },
+  { n: "紫薯", c: "根茎", tag: "秋冬", icon: "🍠", img: "" },
+  { n: "莴笋", c: "根茎", tag: "春", icon: "🫚", img: "" },
+  { n: "茭白", c: "根茎", tag: "夏", icon: "🫚", img: "" },
+  { n: "芦笋", c: "根茎", tag: "春", icon: "🫚", img: "" },
+  { n: "荸荠", c: "根茎", tag: "冬", icon: "🫚", img: "" },
+  { n: "牛蒡", c: "根茎", tag: "", icon: "🫚", img: "" },
+  { n: "芥菜头", c: "根茎", tag: "", icon: "🫚", img: "" },
+
+  // ============ 瓜果 ============
+  { n: "番茄", c: "瓜果", tag: "", icon: "🍅", img: "" },
+  { n: "黄瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
+  { n: "青椒", c: "瓜果", tag: "", icon: "🫑", img: "" },
+  { n: "茄子", c: "瓜果", tag: "夏", icon: "🍆", img: "" },
+  { n: "冬瓜", c: "瓜果", tag: "夏", icon: "🍈", img: "" },
+  { n: "南瓜", c: "瓜果", tag: "秋", icon: "🎃", img: "" },
+  { n: "丝瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
+  { n: "苦瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
+  { n: "西葫芦", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
+  { n: "豆角", c: "瓜果", tag: "夏", icon: "🫘", img: "" },
+  { n: "四季豆", c: "瓜果", tag: "夏", icon: "🫘", img: "" },
+  { n: "荷兰豆", c: "瓜果", tag: "冬春", icon: "🫘", img: "" },
+  { n: "玉米", c: "瓜果", tag: "夏", icon: "🌽", img: "" },
+  { n: "秋葵", c: "瓜果", tag: "夏", icon: "🫛", img: "" },
+  { n: "辣椒", c: "瓜果", tag: "", icon: "🌶️", img: "" },
+  { n: "彩椒", c: "瓜果", tag: "", icon: "🫑", img: "" },
+  { n: "佛手瓜", c: "瓜果", tag: "", icon: "🥒", img: "" },
+
+  // ============ 菌菇 ============
+  { n: "香菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "平菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "金针菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "口蘑", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "杏鲍菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "海鲜菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "蟹味菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "白玉菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "木耳", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "银耳", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "虫草花", c: "菌菇", tag: "", icon: "🍄", img: "" },
+
+  // ============ 豆制品 ============
+  { n: "豆腐", c: "豆制品", tag: "", icon: "🧊", img: "" },
+  { n: "老豆腐", c: "豆制品", tag: "", icon: "🧊", img: "" },
+  { n: "嫩豆腐", c: "豆制品", tag: "", icon: "🧊", img: "" },
+  { n: "豆皮", c: "豆制品", tag: "", icon: "🫘", img: "" },
+  { n: "腐竹", c: "豆制品", tag: "", icon: "🫘", img: "" },
+  { n: "豆干", c: "豆制品", tag: "", icon: "🧊", img: "" },
+  { n: "千张", c: "豆制品", tag: "", icon: "🫘", img: "" },
+  { n: "素鸡", c: "豆制品", tag: "", icon: "🧊", img: "" },
+
+  // ============ 调味 ============
+  { n: "葱", c: "调味", tag: "", icon: "🌰", img: "" },
+  { n: "姜", c: "调味", tag: "", icon: "🫚", img: "" },
+  { n: "蒜", c: "调味", tag: "", icon: "🧄", img: "" },
+  { n: "干辣椒", c: "调味", tag: "", icon: "🌶️", img: "" },
+  { n: "花椒", c: "调味", tag: "", icon: "🌰", img: "" },
+  { n: "八角", c: "调味", tag: "", icon: "🌰", img: "" },
+  { n: "香叶", c: "调味", tag: "", icon: "🌿", img: "" },
+  { n: "桂皮", c: "调味", tag: "", icon: "🌰", img: "" },
+  { n: "料酒", c: "调味", tag: "", icon: "🍶", img: "" },
+  { n: "生抽", c: "调味", tag: "", icon: "🍶", img: "" },
+  { n: "老抽", c: "调味", tag: "", icon: "🍶", img: "" },
+  { n: "蚝油", c: "调味", tag: "", icon: "🍶", img: "" },
+  { n: "醋", c: "调味", tag: "", icon: "🍶", img: "" },
+  { n: "香油", c: "调味", tag: "", icon: "🍶", img: "" },
+  { n: "豆瓣酱", c: "调味", tag: "", icon: "🍶", img: "" },
+
+  // ============ 肉类 ============
+  { n: "五花肉", c: "肉类", tag: "", icon: "🥩", img: "" },
+  { n: "里脊肉", c: "肉类", tag: "", icon: "🥩", img: "" },
+  { n: "排骨", c: "肉类", tag: "", icon: "🍖", img: "" },
+  { n: "鸡腿肉", c: "肉类", tag: "", icon: "🍗", img: "" },
+  { n: "鸡胸肉", c: "肉类", tag: "", icon: "🍗", img: "" },
+  { n: "牛肉", c: "肉类", tag: "", icon: "🥩", img: "" },
+  { n: "牛腩", c: "肉类", tag: "", icon: "🥩", img: "" },
+  { n: "羊肉", c: "肉类", tag: "冬", icon: "🥩", img: "" },
+  { n: "猪蹄", c: "肉类", tag: "", icon: "🍖", img: "" },
+  { n: "鸡翅", c: "肉类", tag: "", icon: "🍗", img: "" },
+  { n: "鸡爪", c: "肉类", tag: "", icon: "🍗", img: "" },
+  { n: "鸭肉", c: "肉类", tag: "", icon: "🦆", img: "" },
+  { n: "鸭翅", c: "肉类", tag: "", icon: "🦆", img: "" },
+  { n: "培根", c: "肉类", tag: "", icon: "🥓", img: "" },
+  { n: "火腿", c: "肉类", tag: "", icon: "🥓", img: "" },
+  { n: "腊肉", c: "肉类", tag: "冬", icon: "🥓", img: "" },
+  { n: "香肠", c: "肉类", tag: "", icon: "🌭", img: "" },
+
+  // ============ 水产 ============
+  { n: "鲫鱼", c: "水产", tag: "", icon: "🐟", img: "" },
+  { n: "草鱼", c: "水产", tag: "", icon: "🐟", img: "" },
+  { n: "鲈鱼", c: "水产", tag: "", icon: "🐟", img: "" },
+  { n: "带鱼", c: "水产", tag: "", icon: "🐟", img: "" },
+  { n: "虾", c: "水产", tag: "", icon: "🦐", img: "" },
+  { n: "基围虾", c: "水产", tag: "", icon: "🦐", img: "" },
+  { n: "螃蟹", c: "水产", tag: "秋", icon: "🦀", img: "" },
+  { n: "花蛤", c: "水产", tag: "", icon: "🐚", img: "" },
+  { n: "蛏子", c: "水产", tag: "", icon: "🐚", img: "" },
+  { n: "鱿鱼", c: "水产", tag: "", icon: "🦑", img: "" },
+  { n: "墨鱼", c: "水产", tag: "", icon: "🦑", img: "" },
+  { n: "生蚝", c: "水产", tag: "", icon: "🦪", img: "" },
+
+  // ============ 蛋禽 ============
+  { n: "鸡蛋", c: "蛋禽", tag: "", icon: "🥚", img: "" },
+  { n: "鸭蛋", c: "蛋禽", tag: "", icon: "🥚", img: "" },
+  { n: "鹌鹑蛋", c: "蛋禽", tag: "", icon: "🥚", img: "" },
+  { n: "皮蛋", c: "蛋禽", tag: "", icon: "🥚", img: "" },
+  { n: "咸鸭蛋", c: "蛋禽", tag: "", icon: "🥚", img: "" },
+
+  // ============ 其他 ============
+  { n: "海带", c: "其他", tag: "", icon: "🌊", img: "" },
+  { n: "紫菜", c: "其他", tag: "", icon: "🌊", img: "" },
+  { n: "花生", c: "其他", tag: "", icon: "🥜", img: "" },
+  { n: "板栗", c: "其他", tag: "秋", icon: "🌰", img: "" },
+  { n: "西兰花", c: "其他", tag: "", icon: "🥦", img: "" },
+  { n: "花菜", c: "其他", tag: "", icon: "🥦", img: "" },
+  { n: "豌豆", c: "其他", tag: "春", icon: "🫛", img: "" },
+  { n: "蚕豆", c: "其他", tag: "春", icon: "🫛", img: "" },
+  { n: "玉米粒", c: "其他", tag: "", icon: "🌽", img: "" }
 ];
 
 function detectWeChat() {
@@ -867,6 +1165,7 @@ createApp({
     const showShare = ref(false);
     const showAdd = ref(false);
     const showRoleSwitch = ref(false);
+    const showPreview = ref(false);
     const shareUrl = ref('');
     const newItem = ref({ name: '', cat: '其他' });
 
@@ -886,9 +1185,14 @@ createApp({
     const celebrateHiding = ref(false);
     let celebrateTimers = [];
 
-    // 二维码状态
-    const qrDownloaded = ref(false);   // 微信外：是否已下载
-    const qrImageUrl = ref('');        // 微信内：大图的 dataURL
+    const qrDownloaded = ref(false);
+    const qrImageUrl = ref('');
+
+    // 图片失败记录
+    const failedImgs = ref({});
+
+    // 图片放大预览
+    const imgViewer = ref({ show: false, src: '', name: '' });
 
     const toastShow = ref(false);
     const toastMsg = ref('');
@@ -936,6 +1240,48 @@ createApp({
       return (idx >= 0 && idx < todoList.value.length) ? todoList.value[idx] : null;
     });
 
+    // 采购模式里，所有有图的食材（用于预览网格）
+    const previewItems = computed(() => {
+      return todoList.value
+        .map(item => {
+          const found = allItems.value.find(i => i.n === item.name);
+          if (found && found.img && !failedImgs.value[found.n]) {
+            return { n: found.n, img: found.img, icon: found.icon };
+          }
+          return null;
+        })
+        .filter(Boolean);
+    });
+
+    /* ---------- 图片加载失败兜底 ---------- */
+    function onImgError(item) {
+      failedImgs.value = { ...failedImgs.value, [item.n]: true };
+    }
+
+    /* ---------- 图片放大预览 ---------- */
+    function openImgViewer(item) {
+      if (!item || !item.img) return;
+      imgViewer.value = { show: true, src: item.img, name: item.n };
+    }
+
+    function openImgViewerByName(name) {
+      const found = allItems.value.find(i => i.n === name);
+      if (found && found.img && !failedImgs.value[found.n]) {
+        imgViewer.value = { show: true, src: found.img, name: found.n };
+      }
+    }
+
+    function closeImgViewer() {
+      imgViewer.value = { show: false, src: '', name: '' };
+    }
+
+    // 根据名称查图片
+    function getItemImage(name) {
+      const found = allItems.value.find(i => i.n === name);
+      if (found && found.img && !failedImgs.value[found.n]) return found.img;
+      return null;
+    }
+
     /* ---------- 挑菜 ---------- */
     function toggleItem(name) {
       if (!state.value[name]) {
@@ -978,7 +1324,7 @@ createApp({
       const n = newItem.value.name.trim();
       if (!n) { showToast('请输入食材名称'); return; }
       if (allItems.value.find(i => i.n === n)) { showToast('已存在该食材'); return; }
-      allItems.value.push({ n, c: newItem.value.cat, tag: '', icon: '🥬' });
+      allItems.value.push({ n, c: newItem.value.cat, tag: '', icon: '🥬', img: '' });
       state.value[n] = { on: true, q: 1, note: '' };
       newItem.value = { name: '', cat: '其他' };
       showAdd.value = false;
@@ -986,7 +1332,7 @@ createApp({
       showToast('已添加');
     }
 
-    /* ---------- 二维码生成 ---------- */
+    /* ---------- 二维码 ---------- */
     function generateQRCanvas(text, containerId, size) {
       const box = document.getElementById(containerId);
       if (!box) return null;
@@ -1000,7 +1346,6 @@ createApp({
           colorLight: '#fff',
           correctLevel: QRCode.CorrectLevel.M
         });
-        // 找到生成的 canvas
         return box.querySelector('canvas');
       } catch (e) {
         console.warn('二维码生成失败', e);
@@ -1009,7 +1354,6 @@ createApp({
       }
     }
 
-    // 把 canvas 转成带白底的 dataURL
     function canvasToPaddedDataUrl(canvas, padding = 20) {
       const size = canvas.width;
       const out = document.createElement('canvas');
@@ -1022,7 +1366,6 @@ createApp({
       return out.toDataURL('image/png');
     }
 
-    /* ---------- 微信外：下载二维码 ---------- */
     function downloadQR() {
       const box = document.getElementById('qrcode');
       if (!box) return;
@@ -1071,15 +1414,12 @@ createApp({
       const base = location.origin + location.pathname;
       shareUrl.value = base + '#list=' + data;
 
-      // 重置状态
       qrDownloaded.value = false;
       qrImageUrl.value = '';
       showShare.value = true;
 
       nextTick(() => {
         if (isWeChat.value) {
-          // 微信内：先生成 canvas（在隐藏容器），再转成大图
-          // 用一个临时容器生成
           const tmp = document.createElement('div');
           tmp.style.position = 'fixed';
           tmp.style.left = '-9999px';
@@ -1092,13 +1432,11 @@ createApp({
               qrImageUrl.value = canvasToPaddedDataUrl(canvas, 20);
             } catch (e) {
               console.warn('转图片失败', e);
-              // 降级：把临时容器里的 canvas 直接移出来
               qrImageUrl.value = canvas.toDataURL('image/png');
             }
           }
           document.body.removeChild(tmp);
         } else {
-          // 微信外：正常生成到 #qrcode 容器
           generateQRCanvas(shareUrl.value, 'qrcode', 180);
         }
       });
@@ -1231,6 +1569,10 @@ createApp({
         i.reason = '';
       });
       saveShopperProgress();
+    }
+
+    function openPreview() {
+      showPreview.value = true;
     }
 
     /* ---------- 庆祝 ---------- */
@@ -1512,20 +1854,24 @@ createApp({
 
     return {
       mode, allItems, state, todoList, currentCat,
-      showShare, showAdd, showRoleSwitch, shareUrl, newItem,
+      showShare, showAdd, showRoleSwitch, showPreview, shareUrl, newItem,
       isWeChat,
       showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
       showExport, exportText, exportAreaRef,
       showCelebrate, celebrateHiding,
-      qrDownloaded, qrImageUrl,
+      qrDownloaded, qrImageUrl, failedImgs,
+      imgViewer,
       cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
-      progressPercent, allDone,
+      progressPercent, allDone, previewItems,
+      onImgError,
+      openImgViewer, openImgViewerByName, closeImgViewer, getItemImage,
       toggleItem, changeQty, updateNote,
       selectAll, clearAll, doAdd,
       openShare, copyUrl, nativeShare, downloadQR,
       toggleDone, toggleStrike, toggleAllDone, resetProgress, backToPicker,
       confirmReason, cancelReason,
       openExport, resetExportText, copyExport,
+      openPreview,
       closeCelebrate,
       toastShow, toastMsg
     };
