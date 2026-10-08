@@ -24,6 +24,7 @@ html, body {
 }
 body { padding-bottom: 30px; }
 
+/* ========== 顶部栏 ========== */
 .topbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 60;
   background: var(--primary); color: #fff;
@@ -56,6 +57,7 @@ body { padding-bottom: 30px; }
 .btn-primary { background: #fff; color: var(--primary); }
 .btn:active { opacity: .8; }
 
+/* ========== 分类 tabs ========== */
 .cat-tabs {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto;
@@ -71,6 +73,7 @@ body { padding-bottom: 30px; }
 }
 .cat-tab.active { color: #fff; background: var(--primary); }
 
+/* ========== 挑菜模式：网格 ========== */
 .grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
   padding: 12px 16px;
@@ -133,6 +136,7 @@ body { padding-bottom: 30px; }
 }
 .note-input:focus { outline: none; border-color: var(--primary); }
 
+/* ========== 采购模式 ========== */
 .todo-wrap {
   max-width: 500px; margin: 0 auto;
   padding: 12px 16px;
@@ -240,6 +244,7 @@ body { padding-bottom: 30px; }
 .empty .icon { font-size: 48px; margin-bottom: 12px; }
 .footer { text-align: center; font-size: 12px; color: #ccc; margin-top: 24px; }
 
+/* ========== 弹窗 ========== */
 .modal-mask {
   position: fixed; inset: 0; z-index: 200; display: none;
   align-items: center; justify-content: center; padding: 20px;
@@ -268,24 +273,6 @@ body { padding-bottom: 30px; }
   display: flex; justify-content: center; padding: 12px;
   background: #fafafa; border-radius: 10px; min-height: 200px;
 }
-.short-status {
-  text-align: center;
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 8px;
-  min-height: 18px;
-}
-.short-status .loading {
-  display: inline-block;
-  width: 10px; height: 10px;
-  border: 2px solid #ddd;
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin .6s linear infinite;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .modal-btns {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -337,6 +324,7 @@ body { padding-bottom: 30px; }
   background: #fff;
 }
 
+/* ========== Toast ========== */
 .toast {
   position: fixed; left: 50%; bottom: 40px;
   transform: translateX(-50%) translateY(20px);
@@ -345,6 +333,153 @@ body { padding-bottom: 30px; }
   opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 300;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ========== 庆祝动画 ========== */
+.celebrate-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .4s ease, visibility .4s;
+  pointer-events: none;
+}
+.celebrate-layer.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.celebrate-layer.hide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.confetti-rain {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.ribbon {
+  position: absolute;
+  top: -30px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: ribbonFall linear forwards;
+}
+@keyframes ribbonFall {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(1); }
+  8% { opacity: 1; }
+  100% { opacity: 0.6; transform: translateY(110vh) rotate(var(--rot)) scale(0.85); }
+}
+.dot {
+  position: absolute;
+  top: -20px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  border-radius: 50%;
+  animation: dotFall linear forwards;
+}
+@keyframes dotFall {
+  0% { opacity: 0; transform: translateY(0) scale(1); }
+  10% { opacity: 1; }
+  100% { opacity: 0.5; transform: translateY(110vh) scale(0.7); }
+}
+
+.celebrate-card {
+  position: relative;
+  z-index: 2;
+  width: 82%;
+  max-width: 320px;
+  padding: 32px 24px 24px;
+  background: #fff;
+  border-radius: 22px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: scale(0.5) translateY(20px);
+  transition:
+    opacity .4s ease .15s,
+    transform .6s cubic-bezier(.34, 1.56, .64, 1) .15s;
+}
+.celebrate-layer.show .celebrate-card {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+.celebrate-layer.hide .celebrate-card {
+  opacity: 0;
+  transform: scale(0.7) translateY(10px);
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+.card-emoji {
+  font-size: 68px;
+  line-height: 1;
+  display: inline-block;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 6px 16px rgba(7, 193, 96, 0.3));
+}
+.celebrate-layer.show .card-emoji {
+  animation: emojiBounce 1.2s ease infinite .6s;
+}
+@keyframes emojiBounce {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  30% { transform: translateY(-8px) scale(1.08) rotate(-8deg); }
+  60% { transform: translateY(-4px) scale(1.05) rotate(8deg); }
+}
+
+.card-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.card-sub {
+  font-size: 14px;
+  color: #8e8e93;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+.card-btn {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: #07c160;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .1s, background .2s;
+}
+.card-btn:active {
+  transform: scale(.97);
+  background: #059a4c;
+}
+.card-glow {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(7, 193, 96, 0.35) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .5s ease .3s;
+  z-index: -1;
+}
+.celebrate-layer.show .card-glow {
+  opacity: 1;
+}
 </style>
 </head>
 <body>
@@ -497,17 +632,6 @@ body { padding-bottom: 30px; }
         看到精简的待办清单，可勾选已买到的食材
       </p>
       <div id="qrcode"></div>
-      <div class="short-status">
-        <span v-if="shortUrlLoading">
-          <span class="loading"></span>正在生成短链...<span style="color:#aaa;margin-left:4px">{{ shortUrlTrying }}</span>
-        </span>
-        <span v-else-if="shortUrlReady" style="color:var(--primary)">
-          ✓ 已通过 {{ shortUrlSource }} 生成短链
-        </span>
-        <span v-else-if="shortUrlFailed" style="color:#ff9500">
-          短链生成失败，使用原始链接
-        </span>
-      </div>
       <textarea class="share-url" :value="shareUrl" readonly ref="shareUrlRef"></textarea>
       <div class="modal-btns three">
         <button class="btn btn-outline" @click="showShare = false">关闭</button>
@@ -592,6 +716,21 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
+  <!-- 庆祝动画层 -->
+  <div class="celebrate-layer" :class="{ show: showCelebrate && !celebrateHiding, hide: celebrateHiding }">
+    <div class="confetti-rain" id="confettiRain"></div>
+    <div class="celebrate-card">
+      <div class="card-glow"></div>
+      <div class="card-emoji">🎉</div>
+      <div class="card-title">全部买齐啦！</div>
+      <div class="card-sub">
+        本周末的采购任务圆满完成<br>
+        辛苦啦，快去休息一下吧～
+      </div>
+      <button class="card-btn" @click="closeCelebrate">好的</button>
+    </div>
+  </div>
+
   <div class="toast" :class="{ show: toastShow }">{{ toastMsg }}</div>
 </div>
 
@@ -647,70 +786,6 @@ const allItemsData = [
   {n:"豌豆",c:"其他",tag:"春",icon:"🫛"},{n:"蚕豆",c:"其他",tag:"春",icon:"🫛"},{n:"玉米粒",c:"其他",tag:"",icon:"🌽"}
 ];
 
-/* ==================== 多短链服务 ==================== */
-// 每个服务返回一个 { name, fn(longUrl) } 对象
-// fn 应返回 Promise<string | null>，成功返回短链，失败抛错或返回 null
-
-const shorteners = [
-  {
-    name: 'is.gd',
-    async fn(longUrl) {
-      const api = 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
-      const res = await fetch(api);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      if (data.shorturl) return data.shorturl;
-      throw new Error(data.errormessage || 'no shorturl');
-    }
-  },
-  {
-    name: 'v.gd',
-    async fn(longUrl) {
-      const api = 'https://v.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
-      const res = await fetch(api);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      if (data.shorturl) return data.shorturl;
-      throw new Error(data.errormessage || 'no shorturl');
-    }
-  },
-  {
-    name: 'tinyurl',
-    async fn(longUrl) {
-      // tinyurl 支持 GET 简单用法（no key）
-      const api = 'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl);
-      const res = await fetch(api);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const text = (await res.text()).trim();
-      if (text && text.startsWith('http')) return text;
-      throw new Error('bad response');
-    }
-  }
-];
-
-/**
- * 依次尝试多个短链服务，返回第一个成功的。
- * onTrying(name) 会在每次尝试前回调，便于 UI 显示"正在用 xx 生成"。
- */
-async function shortenUrlMulti(longUrl, onTrying, perTryTimeout = 6000) {
-  for (const s of shorteners) {
-    try {
-      if (onTrying) onTrying(s.name);
-      const short = await Promise.race([
-        s.fn(longUrl),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), perTryTimeout))
-      ]);
-      if (short && short !== longUrl) {
-        return { short, source: s.name };
-      }
-    } catch (e) {
-      console.warn(`[短链] ${s.name} 失败：`, e.message || e);
-      // 继续试下一个
-    }
-  }
-  return null; // 全失败
-}
-
 /* ==================== 应用 ==================== */
 createApp({
   setup() {
@@ -725,14 +800,6 @@ createApp({
     const shareUrl = ref('');
     const newItem = ref({ name: '', cat: '其他' });
 
-    // 短链状态
-    const shortUrlLoading = ref(false);
-    const shortUrlReady = ref(false);
-    const shortUrlFailed = ref(false);
-    const shortUrlSource = ref('');   // 成功的服务名
-    const shortUrlTrying = ref('');   // 当前正在尝试的服务名
-    let shareRequestId = 0;
-
     // 划掉原因
     const showReason = ref(false);
     const reasonText = ref('');
@@ -744,6 +811,11 @@ createApp({
     const showExport = ref(false);
     const exportText = ref('');
     const exportAreaRef = ref(null);
+
+    // 庆祝
+    const showCelebrate = ref(false);
+    const celebrateHiding = ref(false);
+    let celebrateTimers = [];
 
     const toastShow = ref(false);
     const toastMsg = ref('');
@@ -857,54 +929,17 @@ createApp({
       }
     }
 
-    async function openShare() {
+    function openShare() {
       const sel = Object.entries(state.value).filter(([, s]) => s.on);
       if (!sel.length) { showToast('还没有选择任何食材'); return; }
 
       const compact = sel.map(([k, s]) => [k, s.q || 1, s.note || '']);
       const data = encodeURIComponent(JSON.stringify(compact));
       const base = location.origin + location.pathname;
-      const longUrl = base + '#list=' + data;
-
-      shareUrl.value = longUrl;
+      shareUrl.value = base + '#list=' + data;
       showShare.value = true;
-      shortUrlLoading.value = true;
-      shortUrlReady.value = false;
-      shortUrlFailed.value = false;
-      shortUrlSource.value = '';
-      shortUrlTrying.value = '';
 
-      nextTick(() => { generateQR(longUrl); });
-
-      const myReqId = ++shareRequestId;
-
-      try {
-        const result = await shortenUrlMulti(
-          longUrl,
-          (name) => {
-            if (myReqId === shareRequestId) shortUrlTrying.value = name;
-          }
-        );
-
-        if (myReqId !== shareRequestId) return;
-
-        if (result && result.short) {
-          shareUrl.value = result.short;
-          shortUrlReady.value = true;
-          shortUrlSource.value = result.source;
-          nextTick(() => { generateQR(result.short); });
-        } else {
-          shortUrlFailed.value = true;
-        }
-      } catch (e) {
-        console.warn('短链流程异常', e);
-        if (myReqId === shareRequestId) shortUrlFailed.value = true;
-      } finally {
-        if (myReqId === shareRequestId) {
-          shortUrlLoading.value = false;
-          shortUrlTrying.value = '';
-        }
-      }
+      nextTick(() => { generateQR(shareUrl.value); });
     }
 
     function copyUrl() {
@@ -939,6 +974,7 @@ createApp({
       if (item.struck) return;
       item.done = !item.done;
       saveShopperProgress();
+      checkAllDone();
     }
 
     function toggleStrike(idx) {
@@ -948,6 +984,7 @@ createApp({
         item.reason = '';
         saveShopperProgress();
         showToast('已恢复');
+        checkAllDone();
         return;
       }
       reasonTargetIdx.value = idx;
@@ -973,6 +1010,7 @@ createApp({
       reasonTargetIdx.value = -1;
       reasonText.value = '';
       showToast('已划掉');
+      checkAllDone();
     }
 
     function cancelReason() {
@@ -988,6 +1026,10 @@ createApp({
         i.done = target;
       });
       saveShopperProgress();
+      if (target) {
+        // 触发庆祝
+        triggerCelebrate();
+      }
     }
 
     function resetProgress() {
@@ -1000,6 +1042,91 @@ createApp({
       saveShopperProgress();
     }
 
+    /* ---------- 庆祝动画 ---------- */
+    function checkAllDone() {
+      // 全部买齐时触发庆祝
+      if (activeCount.value > 0 && doneCount.value === activeCount.value) {
+        triggerCelebrate();
+      }
+    }
+
+    function triggerCelebrate() {
+      // 清掉旧计时器
+      celebrateTimers.forEach(t => clearTimeout(t));
+      celebrateTimers = [];
+      showCelebrate.value = true;
+      celebrateHiding.value = false;
+      // 清除旧彩带
+      nextTick(() => {
+        startConfettiRain();
+      });
+      // 3.5 秒后自动关闭
+      celebrateTimers.push(setTimeout(() => {
+        closeCelebrate();
+      }, 3500));
+    }
+
+    function closeCelebrate() {
+      celebrateHiding.value = true;
+      celebrateTimers.push(setTimeout(() => {
+        showCelebrate.value = false;
+        celebrateHiding.value = false;
+        clearConfettiRain();
+      }, 500));
+    }
+
+    function startConfettiRain() {
+      const rain = document.getElementById('confettiRain');
+      if (!rain) return;
+      rain.innerHTML = '';
+      const COLORS = [
+        '#ff3b30', '#ff9500', '#ffcc00', '#07c160', '#30d158',
+        '#00c7be', '#5856d6', '#af52de', '#ff2d55', '#ffd60a',
+        '#ff6b6b', '#4ecdc4', '#feca57', '#ff9ff3', '#54a0ff',
+        '#ffffff', '#ffde59'
+      ];
+      const W = window.innerWidth;
+
+      // 彩带条
+      for (let i = 0; i < 60; i++) {
+        const r = document.createElement('div');
+        r.className = 'ribbon';
+        const w = 5 + Math.random() * 5;
+        const h = 14 + Math.random() * 18;
+        r.style.width = w + 'px';
+        r.style.height = h + 'px';
+        r.style.left = Math.random() * W + 'px';
+        r.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
+        r.style.borderRadius = '2px';
+        r.style.setProperty('--rot', (Math.random() * 1080 - 540) + 'deg');
+        const duration = 2.8 + Math.random() * 2.2;
+        r.style.animationDuration = duration + 's';
+        r.style.animationDelay = (Math.random() * 0.8) + 's';
+        rain.appendChild(r);
+      }
+
+      // 小圆点
+      for (let i = 0; i < 40; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot';
+        const s = 5 + Math.random() * 6;
+        d.style.width = s + 'px';
+        d.style.height = s + 'px';
+        d.style.left = Math.random() * W + 'px';
+        d.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
+        const duration = 3 + Math.random() * 2;
+        d.style.animationDuration = duration + 's';
+        d.style.animationDelay = (Math.random() * 0.8) + 's';
+        rain.appendChild(d);
+      }
+    }
+
+    function clearConfettiRain() {
+      const rain = document.getElementById('confettiRain');
+      if (rain) rain.innerHTML = '';
+    }
+
+    /* ---------- 导出 ---------- */
     function buildExportText() {
       if (!todoList.value.length) return '（清单为空）';
 
@@ -1089,6 +1216,7 @@ createApp({
       }
     }
 
+    /* ---------- 存储 ---------- */
     function saveShopperProgress() {
       try {
         const raw = location.hash.startsWith('#list=') ? location.hash.slice(6) : '';
@@ -1189,10 +1317,9 @@ createApp({
     return {
       mode, allItems, state, todoList, currentCat,
       showShare, showAdd, showRoleSwitch, shareUrl, newItem,
-      shortUrlLoading, shortUrlReady, shortUrlFailed,
-      shortUrlSource, shortUrlTrying,
       showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
       showExport, exportText, exportAreaRef,
+      showCelebrate, celebrateHiding,
       cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
       progressPercent, allDone,
       toggleItem, changeQty, updateNote,
@@ -1201,6 +1328,7 @@ createApp({
       toggleDone, toggleStrike, toggleAllDone, resetProgress, backToPicker,
       confirmReason, cancelReason,
       openExport, resetExportText, copyExport,
+      closeCelebrate,
       toastShow, toastMsg
     };
   }
