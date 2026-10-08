@@ -24,7 +24,6 @@ html, body {
 }
 body { padding-bottom: 30px; }
 
-/* ========== 顶部栏 ========== */
 .topbar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 60;
   background: var(--primary); color: #fff;
@@ -57,7 +56,6 @@ body { padding-bottom: 30px; }
 .btn-primary { background: #fff; color: var(--primary); }
 .btn:active { opacity: .8; }
 
-/* ========== 分类 tabs ========== */
 .cat-tabs {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto;
@@ -73,7 +71,6 @@ body { padding-bottom: 30px; }
 }
 .cat-tab.active { color: #fff; background: var(--primary); }
 
-/* ========== 挑菜模式：网格 ========== */
 .grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
   padding: 12px 16px;
@@ -136,7 +133,6 @@ body { padding-bottom: 30px; }
 }
 .note-input:focus { outline: none; border-color: var(--primary); }
 
-/* ========== 采购模式 ========== */
 .todo-wrap {
   max-width: 500px; margin: 0 auto;
   padding: 12px 16px;
@@ -273,6 +269,16 @@ body { padding-bottom: 30px; }
   display: flex; justify-content: center; padding: 12px;
   background: #fafafa; border-radius: 10px; min-height: 200px;
 }
+/* 微信内的二维码容器：更大、更明显 */
+#qrcode.wechat-qr {
+  background: #fff;
+  border: 2px dashed #07c160;
+  padding: 18px;
+}
+#qrcode.wechat-qr canvas,
+#qrcode.wechat-qr img {
+  display: block;
+}
 
 .modal-btns {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -286,6 +292,46 @@ body { padding-bottom: 30px; }
 }
 .modal-btns .btn-outline { background: #f2f2f2; color: #555; }
 .modal-btns .btn-primary { background: var(--primary); color: #fff; }
+
+/* 微信内提示卡片 */
+.wechat-tip {
+  background: #f0fbf5;
+  border: 1px solid #c8e6c9;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #059a4c;
+}
+.wechat-tip .tip-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wechat-tip .tip-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 4px;
+  color: #2c6b3f;
+}
+.wechat-tip .tip-num {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #07c160;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
 
 .add-input, .add-select {
   width: 100%; height: 42px; border: 1px solid #ddd; border-radius: 9px;
@@ -324,7 +370,6 @@ body { padding-bottom: 30px; }
   background: #fff;
 }
 
-/* ========== Toast ========== */
 .toast {
   position: fixed; left: 50%; bottom: 40px;
   transform: translateX(-50%) translateY(20px);
@@ -627,17 +672,47 @@ body { padding-bottom: 30px; }
   <div class="modal-mask" :class="{ show: showShare }" @click.self="showShare = false">
     <div class="modal"><div class="modal-inner">
       <h3>分享采购清单</h3>
-      <p class="hint">
-        家人打开链接或扫码后，会进入<b>采购模式</b><br>
-        看到精简的待办清单，可勾选已买到的食材
-      </p>
-      <div id="qrcode"></div>
-      <textarea class="share-url" :value="shareUrl" readonly ref="shareUrlRef"></textarea>
-      <div class="modal-btns three">
-        <button class="btn btn-outline" @click="showShare = false">关闭</button>
-        <button class="btn btn-outline" @click="copyUrl">复制链接</button>
-        <button class="btn btn-primary" @click="nativeShare">分享</button>
-      </div>
+
+      <!-- 微信内提示 -->
+      <template v-if="isWeChat">
+        <p class="hint" style="color:#07c160;font-weight:600">
+          微信内请按下面方式分享给家人
+        </p>
+        <div id="qrcode" class="wechat-qr"></div>
+        <div class="wechat-tip">
+          <div class="tip-title">📱 分享方法</div>
+          <div class="tip-item">
+            <span class="tip-num">1</span>
+            <span><b>长按上方二维码</b> → 保存图片</span>
+          </div>
+          <div class="tip-item">
+            <span class="tip-num">2</span>
+            <span>把图片发给家人</span>
+          </div>
+          <div class="tip-item">
+            <span class="tip-num">3</span>
+            <span>家人<b>长按二维码 → 识别</b>即可打开清单</span>
+          </div>
+        </div>
+        <div class="modal-btns" style="grid-template-columns:1fr">
+          <button class="btn btn-primary" @click="showShare = false">我知道了</button>
+        </div>
+      </template>
+
+      <!-- 微信外：正常分享 -->
+      <template v-else>
+        <p class="hint">
+          家人打开链接或扫码后，会进入<b>采购模式</b><br>
+          看到精简的待办清单，可勾选已买到的食材
+        </p>
+        <div id="qrcode"></div>
+        <textarea class="share-url" :value="shareUrl" readonly ref="shareUrlRef"></textarea>
+        <div class="modal-btns three">
+          <button class="btn btn-outline" @click="showShare = false">关闭</button>
+          <button class="btn btn-outline" @click="copyUrl">复制链接</button>
+          <button class="btn btn-primary" @click="nativeShare">分享</button>
+        </div>
+      </template>
     </div></div>
   </div>
 
@@ -786,6 +861,11 @@ const allItemsData = [
   {n:"豌豆",c:"其他",tag:"春",icon:"🫛"},{n:"蚕豆",c:"其他",tag:"春",icon:"🫛"},{n:"玉米粒",c:"其他",tag:"",icon:"🌽"}
 ];
 
+/* ==================== 环境检测 ==================== */
+function detectWeChat() {
+  return /micromessenger/i.test(navigator.userAgent);
+}
+
 /* ==================== 应用 ==================== */
 createApp({
   setup() {
@@ -799,6 +879,9 @@ createApp({
     const showRoleSwitch = ref(false);
     const shareUrl = ref('');
     const newItem = ref({ name: '', cat: '其他' });
+
+    // 环境
+    const isWeChat = ref(detectWeChat());
 
     // 划掉原因
     const showReason = ref(false);
@@ -913,15 +996,20 @@ createApp({
       showToast('已添加');
     }
 
-    function generateQR(text) {
+    /* ---------- 二维码 ---------- */
+    function generateQR(text, wechatMode) {
       const box = document.getElementById('qrcode');
       if (!box) return;
       box.innerHTML = '';
       try {
+        // 微信内二维码更大一些，方便长按
+        const size = wechatMode ? 240 : 180;
         new QRCode(box, {
           text: text,
-          width: 180, height: 180,
-          colorDark: '#000', colorLight: '#fff',
+          width: size,
+          height: size,
+          colorDark: '#000',
+          colorLight: '#fff',
           correctLevel: QRCode.CorrectLevel.M
         });
       } catch (e) {
@@ -929,6 +1017,7 @@ createApp({
       }
     }
 
+    /* ---------- 分享 ---------- */
     function openShare() {
       const sel = Object.entries(state.value).filter(([, s]) => s.on);
       if (!sel.length) { showToast('还没有选择任何食材'); return; }
@@ -939,20 +1028,51 @@ createApp({
       shareUrl.value = base + '#list=' + data;
       showShare.value = true;
 
-      nextTick(() => { generateQR(shareUrl.value); });
+      nextTick(() => {
+        // 微信内二维码加大，并在外围加虚线框
+        generateQR(shareUrl.value, isWeChat.value);
+      });
     }
 
+    // 复制链接（含微信降级）
     function copyUrl() {
-      const ta = document.querySelector('.share-url');
-      if (!ta) return;
-      ta.select(); ta.setSelectionRange(0, 99999);
-      const done = () => showToast('链接已复制');
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareUrl.value).then(done).catch(() => {
-          try { document.execCommand('copy'); done(); } catch(e){}
-        });
+      const text = shareUrl.value;
+      if (!text) return;
+
+      // 微信内：直接走 input + execCommand
+      if (isWeChat.value) {
+        fallbackCopy(text);
+        return;
+      }
+
+      // 非微信：优先用 navigator.clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast('链接已复制'))
+          .catch(() => fallbackCopy(text));
       } else {
-        try { document.execCommand('copy'); done(); } catch(e){}
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '0';
+        ta.setAttribute('readonly', '');
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) showToast('链接已复制');
+        else showToast('复制失败，请长按二维码保存');
+      } catch (e) {
+        showToast('复制失败，请长按二维码保存');
       }
     }
 
@@ -1027,7 +1147,6 @@ createApp({
       });
       saveShopperProgress();
       if (target) {
-        // 触发庆祝
         triggerCelebrate();
       }
     }
@@ -1044,23 +1163,19 @@ createApp({
 
     /* ---------- 庆祝动画 ---------- */
     function checkAllDone() {
-      // 全部买齐时触发庆祝
       if (activeCount.value > 0 && doneCount.value === activeCount.value) {
         triggerCelebrate();
       }
     }
 
     function triggerCelebrate() {
-      // 清掉旧计时器
       celebrateTimers.forEach(t => clearTimeout(t));
       celebrateTimers = [];
       showCelebrate.value = true;
       celebrateHiding.value = false;
-      // 清除旧彩带
       nextTick(() => {
         startConfettiRain();
       });
-      // 3.5 秒后自动关闭
       celebrateTimers.push(setTimeout(() => {
         closeCelebrate();
       }, 3500));
@@ -1087,7 +1202,6 @@ createApp({
       ];
       const W = window.innerWidth;
 
-      // 彩带条
       for (let i = 0; i < 60; i++) {
         const r = document.createElement('div');
         r.className = 'ribbon';
@@ -1105,7 +1219,6 @@ createApp({
         rain.appendChild(r);
       }
 
-      // 小圆点
       for (let i = 0; i < 40; i++) {
         const d = document.createElement('div');
         d.className = 'dot';
@@ -1189,7 +1302,14 @@ createApp({
     function copyExport() {
       const text = exportText.value;
       if (!text) { showToast('没有可复制的内容'); return; }
+
       const done = () => showToast('已复制，快去分享吧');
+
+      // 微信内：直接走 textarea + execCommand
+      if (isWeChat.value) {
+        fallbackCopyExport(text, done);
+        return;
+      }
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(done).catch(() => {
@@ -1206,11 +1326,16 @@ createApp({
         ta.value = text;
         ta.style.position = 'fixed';
         ta.style.left = '-9999px';
+        ta.style.top = '0';
+        ta.setAttribute('readonly', '');
         document.body.appendChild(ta);
+        ta.focus();
         ta.select();
-        document.execCommand('copy');
+        ta.setSelectionRange(0, text.length);
+        const ok = document.execCommand('copy');
         document.body.removeChild(ta);
-        done();
+        if (ok) done();
+        else showToast('复制失败，请长按选择');
       } catch (e) {
         showToast('复制失败，请长按选择');
       }
@@ -1317,6 +1442,7 @@ createApp({
     return {
       mode, allItems, state, todoList, currentCat,
       showShare, showAdd, showRoleSwitch, shareUrl, newItem,
+      isWeChat,
       showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
       showExport, exportText, exportAreaRef,
       showCelebrate, celebrateHiding,
