@@ -48,7 +48,7 @@ body { padding-bottom: 30px; }
 .top-actions {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px;
 }
-.top-actions.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.top-actions.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .top-actions .btn {
   height: 36px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -307,6 +307,26 @@ body { padding-bottom: 30px; }
 }
 .quick-reason-btn:active { background: #ececf0; }
 
+/* 导出文字区 */
+.export-area {
+  width: 100%;
+  min-height: 220px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  resize: vertical;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #fafafa;
+  color: #333;
+}
+.export-area:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #fff;
+}
+
 /* ========== Toast ========== */
 .toast {
   position: fixed; left: 50%; bottom: 40px;
@@ -349,11 +369,12 @@ body { padding-bottom: 30px; }
       <button class="btn btn-outline" @click="showAdd = true">＋ 自选</button>
       <button class="btn btn-primary" @click="openShare">🔗 分享</button>
     </div>
-    <div class="top-actions two" v-else>
+    <div class="top-actions three" v-else>
       <button class="btn btn-outline" @click="toggleAllDone">
         {{ allDone ? '全部取消' : '全部买齐' }}
       </button>
       <button class="btn btn-outline" @click="resetProgress">重置勾选</button>
+      <button class="btn btn-primary" @click="openExport">📋 导出</button>
     </div>
   </div>
 
@@ -526,6 +547,25 @@ body { padding-bottom: 30px; }
     </div></div>
   </div>
 
+  <!-- ========== 导出采购情况弹窗 ========== -->
+  <div class="modal-mask" :class="{ show: showExport }" @click.self="showExport = false">
+    <div class="modal"><div class="modal-inner">
+      <h3>采购情况</h3>
+      <p class="hint">可以直接编辑下面的文字，然后复制分享</p>
+      <textarea
+        class="export-area"
+        v-model="exportText"
+        ref="exportAreaRef"
+        placeholder="清单是空的"
+      ></textarea>
+      <div class="modal-btns three">
+        <button class="btn btn-outline" @click="showExport = false">关闭</button>
+        <button class="btn btn-outline" @click="resetExportText">还原</button>
+        <button class="btn btn-primary" @click="copyExport">复制文字</button>
+      </div>
+    </div></div>
+  </div>
+
   <!-- ========== 角色切换提示 ========== -->
   <div class="modal-mask" :class="{ show: showRoleSwitch }" @click.self="showRoleSwitch = false">
     <div class="modal"><div class="modal-inner">
@@ -615,6 +655,11 @@ createApp({
     const reasonTargetIdx = ref(-1);
     const reasonInputRef = ref(null);
     const quickReasons = ['家里还有', '不太新鲜', '改买别的', '太贵了', '不需要'];
+
+    // 导出
+    const showExport = ref(false);
+    const exportText = ref('');
+    const exportAreaRef = ref(null);
 
     const toastShow = ref(false);
     const toastMsg = ref('');
@@ -774,7 +819,7 @@ createApp({
     /* ---------- 采购：勾选已买 ---------- */
     function toggleDone(idx) {
       const item = todoList.value[idx];
-      if (item.struck) return;  // 划掉的不能勾选
+      if (item.struck) return;
       item.done = !item.done;
       saveShopperProgress();
     }
@@ -782,7 +827,6 @@ createApp({
     /* ---------- 采购：划掉 / 恢复 ---------- */
     function toggleStrike(idx) {
       const item = todoList.value[idx];
-      // 已划掉 → 直接恢复，不弹窗
       if (item.struck) {
         item.struck = false;
         item.reason = '';
@@ -790,7 +834,6 @@ createApp({
         showToast('已恢复');
         return;
       }
-      // 未划掉 → 打开弹窗填原因
       reasonTargetIdx.value = idx;
       reasonText.value = '';
       showReason.value = true;
@@ -808,7 +851,7 @@ createApp({
       const item = todoList.value[idx];
       item.struck = true;
       item.reason = reasonText.value.trim();
-      item.done = false;  // 划掉时取消已买
+      item.done = false;
       saveShopperProgress();
       showReason.value = false;
       reasonTargetIdx.value = -1;
@@ -841,6 +884,96 @@ createApp({
         i.reason = '';
       });
       saveShopperProgress();
+    }
+
+    /* ---------- 采购：导出情况 ---------- */
+    function buildExportText() {
+      if (!todoList.value.length) return '（清单为空）';
+
+      const bought = [];
+      const pending = [];
+      const struck = [];
+
+      todoList.value.forEach(item => {
+        const line = `- ${item.name}` +
+          (item.qty > 1 ? ` ×${item.qty}` : '') +
+          (item.note ? `（${item.note}）` : '');
+        if (item.struck) {
+          struck.push(line + (item.reason ? `  ❌ ${item.reason}` : '  ❌ 已划掉'));
+        } else if (item.done) {
+          bought.push(line);
+        } else {
+          pending.push(line);
+        }
+      });
+
+      const date = new Date();
+      const dateStr = `${date.getMonth() + 1}月${date.getDate()}日`;
+
+      let txt = `🛒 采购清单 · ${dateStr}\n\n`;
+
+      if (bought.length) {
+        txt += `✅ 已买到（${bought.length}）\n${bought.join('\n')}\n\n`;
+      }
+      if (pending.length) {
+        txt += `⏳ 还没买（${pending.length}）\n${pending.join('\n')}\n\n`;
+      }
+      if (struck.length) {
+        txt += `❌ 已划掉（${struck.length}）\n${struck.join('\n')}\n\n`;
+      }
+
+      const total = todoList.value.length;
+      txt += `——\n共 ${total} 项，已买 ${bought.length}，待买 ${pending.length}`;
+      if (struck.length) txt += `，划掉 ${struck.length}`;
+
+      return txt;
+    }
+
+    function openExport() {
+      if (!todoList.value.length) {
+        showToast('清单是空的');
+        return;
+      }
+      exportText.value = buildExportText();
+      showExport.value = true;
+      nextTick(() => {
+        if (exportAreaRef.value) exportAreaRef.value.focus();
+      });
+    }
+
+    function resetExportText() {
+      exportText.value = buildExportText();
+      showToast('已还原');
+    }
+
+    function copyExport() {
+      const text = exportText.value;
+      if (!text) { showToast('没有可复制的内容'); return; }
+      const done = () => showToast('已复制，快去分享吧');
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => {
+          fallbackCopyExport(text, done);
+        });
+      } else {
+        fallbackCopyExport(text, done);
+      }
+    }
+
+    function fallbackCopyExport(text, done) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (e) {
+        showToast('复制失败，请长按选择');
+      }
     }
 
     /* ---------- 采购进度保存 ---------- */
@@ -948,6 +1081,7 @@ createApp({
       mode, allItems, state, todoList, currentCat,
       showShare, showAdd, showRoleSwitch, shareUrl, newItem,
       showReason, reasonText, quickReasons, reasonInputRef, reasonTarget,
+      showExport, exportText, exportAreaRef,
       cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
       progressPercent, allDone,
       toggleItem, changeQty, updateNote,
@@ -955,6 +1089,7 @@ createApp({
       openShare, copyUrl, nativeShare,
       toggleDone, toggleStrike, toggleAllDone, resetProgress, backToPicker,
       confirmReason, cancelReason,
+      openExport, resetExportText, copyExport,
       toastShow, toastMsg
     };
   }
