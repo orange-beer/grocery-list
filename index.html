@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>每周买菜清单</title>
 <script src="https://cdn.jsdmirror.com/npm/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdmirror.com/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
 <style>
 :root {
   --bg: #f5f5f5;
@@ -56,12 +57,45 @@ body { padding-bottom: 30px; }
 .btn-primary { background: #fff; color: var(--primary); }
 .btn:active { opacity: .8; }
 
+/* ========== 搜索框 ========== */
+.search-wrap { position: relative; margin-top: 10px; }
+.search-icon {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; line-height: 1; opacity: .55; pointer-events: none;
+}
+.search-input {
+  width: 100%; height: 38px; padding: 0 36px;
+  border: none; border-radius: 10px;
+  background: rgba(255,255,255,.92); color: var(--text);
+  font-size: 16px; font-family: inherit;
+}
+.search-input::placeholder { color: #9aa0a6; font-size: 14px; }
+.search-input:focus { outline: none; background: #fff; }
+.search-clear {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  width: 24px; height: 24px; padding: 0;
+  border: none; border-radius: 50%;
+  background: #e6e6e6; color: #666;
+  font-size: 12px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.search-clear:active { background: #d8d8d8; }
+.empty.search-empty { padding-top: calc(200px + env(safe-area-inset-top)); }
+.search-reset {
+  margin-top: 14px; padding: 8px 20px;
+  border: 1px solid #ddd; border-radius: 20px;
+  background: #fff; color: #555;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+}
+.search-reset:active { background: #f5f5f5; }
+
 .cat-tabs {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto;
   background: #fff; border-bottom: 1px solid var(--line);
   -webkit-overflow-scrolling: touch;
-  margin-top: 130px;
+  margin-top: calc(178px + env(safe-area-inset-top));
 }
 .cat-tabs::-webkit-scrollbar { display: none; }
 .cat-tab {
@@ -74,7 +108,7 @@ body { padding-bottom: 30px; }
 .grid {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
   padding: 12px 16px;
-  padding-top: 190px;
+  padding-top: calc(238px + env(safe-area-inset-top));
 }
 .card {
   position: relative; min-height: 132px; padding: 10px 8px 12px;
@@ -103,14 +137,25 @@ body { padding-bottom: 30px; }
   font-size: 14px; font-weight: 600; text-align: center; line-height: 1.3;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+/* 菜名旁边的拼音，如 [bō cài] */
+.py {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a94a6;
+  letter-spacing: .2px;
+}
+.py-light { color: rgba(255,255,255,.78); font-size: 13px; }
 .card-meta { margin-top: 2px; font-size: 11px; text-align: center; color: var(--muted); }
 .card-badge {
   position: absolute; top: 6px; left: 6px; padding: 1px 6px;
   font-size: 10px; font-weight: 600; border-radius: 4px;
 }
+/* 左上角有营养按钮时，标签下移一行，避开按钮和中间的图片 */
+.card.has-info .card-badge { top: 33px; }
 .badge-meat { background: #ffeef0; color: #e04848; }
 .badge-fish { background: #eef4ff; color: #3a7bd5; }
 .badge-season { background: #e8f8ef; color: #07a35a; }
@@ -153,7 +198,7 @@ body { padding-bottom: 30px; }
 .todo-wrap {
   max-width: 500px; margin: 0 auto;
   padding: 12px 16px;
-  padding-top: 160px;
+  padding-top: calc(160px + env(safe-area-inset-top));
 }
 .todo-progress {
   background: #fff; border-radius: 14px; padding: 16px;
@@ -400,6 +445,53 @@ body { padding-bottom: 30px; }
   background: #fff;
 }
 
+/* ========== 营养介绍 ========== */
+.card-info {
+  position: absolute; top: 7px; left: 7px;
+  width: 20px; height: 20px; padding: 0;
+  border: none; border-radius: 50%;
+  background: #e8f8ef; color: #07a35a;
+  font-size: 12px; font-weight: 700; line-height: 1;
+  font-family: Georgia, "Times New Roman", serif;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform .15s ease, background .15s ease;
+}
+.card-info:active { transform: scale(.9); background: #d6f2e2; }
+
+.todo-info {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #e8f8ef;
+  color: #07a35a;
+  font-size: 15px; font-weight: 700; line-height: 1;
+  font-family: Georgia, "Times New Roman", serif;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  padding: 0;
+  margin-left: 2px;
+}
+.todo-info:active { transform: scale(.9); background: #d6f2e2; }
+
+.nutri-sum {
+  font-size: 15px; font-weight: 600; line-height: 1.5;
+  color: #222; background: #f5f5f5;
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
+}
+.nutri-block { margin-bottom: 12px; }
+.nutri-label {
+  font-size: 12px; font-weight: 700; color: var(--text);
+  margin-bottom: 4px; letter-spacing: .3px;
+}
+.nutri-text { font-size: 13px; color: #444; line-height: 1.65; }
+.nutri-note {
+  font-size: 11px; color: #999; text-align: center;
+  margin: 14px 0 0;
+}
+
 .toast {
   position: fixed; left: 50%; bottom: 40px;
   transform: translateX(-50%) translateY(20px);
@@ -505,9 +597,8 @@ body { padding-bottom: 30px; }
   text-align: center;
   padding: 6px 4px;
   color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 .celebrate-layer {
@@ -666,7 +757,7 @@ body { padding-bottom: 30px; }
     </div>
 
     <p class="stats" v-if="mode === 'picker'">
-      已选 {{ selectedCount }} / 共 {{ allItems.length }} 种
+      <template v-if="keyword.trim()">找到 {{ filteredItems.length }} 项 · </template>已选 {{ selectedCount }} / 共 {{ allItems.length }} 种
     </p>
     <p class="stats" v-else>
       已买 {{ doneCount }} / {{ activeCount }} 种
@@ -691,6 +782,19 @@ body { padding-bottom: 30px; }
       <button class="btn btn-outline" @click="openPreview">👁 预览</button>
       <button class="btn btn-primary" @click="openExport">📋 导出</button>
     </div>
+
+    <div class="search-wrap" v-if="mode === 'picker'">
+      <span class="search-icon">🔍</span>
+      <input
+        class="search-input"
+        type="text"
+        v-model="keyword"
+        placeholder="搜索食材或拼音，如 bocai"
+        enterkeyhint="search"
+        autocomplete="off"
+      >
+      <button v-if="keyword" class="search-clear" @click="keyword = ''" title="清空">✕</button>
+    </div>
   </div>
 
   <template v-if="mode === 'picker'">
@@ -700,16 +804,16 @@ body { padding-bottom: 30px; }
         :key="c"
         class="cat-tab"
         :class="{ active: c === currentCat }"
-        @click="currentCat = c"
+        @click="selectCat(c)"
       >{{ c }}</button>
     </div>
 
-    <div class="grid">
+    <div class="grid" v-if="filteredItems.length">
       <div
         v-for="item in filteredItems"
         :key="item.n"
         class="card"
-        :class="{ checked: state[item.n] && state[item.n].on }"
+        :class="{ checked: state[item.n] && state[item.n].on, 'has-info': !!item.sum }"
         @click="toggleItem(item.n)"
       >
         <div class="card-icon">
@@ -724,12 +828,18 @@ body { padding-bottom: 30px; }
           >
           <span v-else>{{ item.icon || '🥬' }}</span>
         </div>
-        <div class="card-name">{{ item.n }}</div>
+        <div class="card-name">{{ item.n }}<span class="py" v-if="item.p">[{{ item.p }}]</span></div>
         <div class="card-meta">{{ item.c }}</div>
         <span v-if="item.c === '肉类'" class="card-badge badge-meat">肉</span>
         <span v-else-if="item.c === '水产'" class="card-badge badge-fish">水产</span>
         <span v-else-if="item.tag" class="card-badge badge-season">{{ item.tag }}</span>
         <div class="check-circle"></div>
+        <button
+          v-if="item.sum"
+          class="card-info"
+          @click.stop="openNutritionByName(item.n)"
+          title="营养价值"
+        >i</button>
 
         <div class="card-expand" @click.stop>
           <div class="qty-row">
@@ -746,6 +856,13 @@ body { padding-bottom: 30px; }
           >
         </div>
       </div>
+    </div>
+
+    <div class="empty search-empty" v-else>
+      <div class="icon">🔍</div>
+      <div>没有找到「{{ keyword }}」</div>
+      <div style="margin-top:6px;font-size:13px">试试菜名、拼音或拼音首字母，比如 bocai / bc</div>
+      <button class="search-reset" @click="keyword = ''">清空搜索</button>
     </div>
   </template>
 
@@ -776,7 +893,9 @@ body { padding-bottom: 30px; }
             </svg>
           </div>
           <div class="todo-body">
-            <div class="todo-name">{{ item.name }}</div>
+            <div class="todo-name">
+              {{ item.name }}<span class="py" v-if="item.py">[{{ item.py }}]</span>
+            </div>
             <div class="todo-note" v-if="item.note">{{ item.note }}</div>
             <div class="todo-reason" v-if="item.struck && item.reason">
               ❌ {{ item.reason }}
@@ -792,6 +911,12 @@ body { padding-bottom: 30px; }
             @click.stop="openImgViewerByName(item.name)"
             title="预览图片"
           >👁</button>
+          <button
+            v-if="getItemNutrition(item.name)"
+            class="todo-info"
+            @click.stop="openNutritionByName(item.name)"
+            title="营养价值"
+          >i</button>
           <button
             class="todo-strike"
             @click.stop="toggleStrike(idx)"
@@ -923,7 +1048,7 @@ body { padding-bottom: 30px; }
             loading="lazy"
             @error="onImgError(p)"
           >
-          <div class="preview-grid-name">{{ p.n }}</div>
+          <div class="preview-grid-name">{{ p.n }}<span class="py" v-if="p.p">[{{ p.p }}]</span></div>
         </div>
       </div>
       <div v-else style="text-align:center;color:#bbb;padding:30px 0;font-size:14px">
@@ -952,6 +1077,32 @@ body { padding-bottom: 30px; }
         <button class="btn btn-outline" @click="showExport = false">关闭</button>
         <button class="btn btn-outline" @click="resetExportText">还原</button>
         <button class="btn btn-primary" @click="copyExport">复制文字</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- 营养价值弹窗 -->
+  <div class="modal-mask" :class="{ show: showNutrition }" @click.self="showNutrition = false">
+    <div class="modal"><div class="modal-inner">
+      <h3>{{ nutrition.name }}<span class="py" v-if="nutrition.py">[{{ nutrition.py }}]</span></h3>
+      <div class="nutri-sum">{{ nutrition.sum }}</div>
+      <div class="nutri-block" v-if="nutrition.nutri">
+        <div class="nutri-label">主要营养</div>
+        <div class="nutri-text">{{ nutrition.nutri }}</div>
+      </div>
+      <div class="nutri-block" v-if="nutrition.eat">
+        <div class="nutri-label">怎么吃更好</div>
+        <div class="nutri-text">{{ nutrition.eat }}</div>
+      </div>
+      <div class="nutri-block" v-if="nutrition.tip">
+        <div class="nutri-label">小提示</div>
+        <div class="nutri-text">{{ nutrition.tip }}</div>
+      </div>
+      <p class="nutri-note">以上为通用膳食参考，不能代替医嘱</p>
+      <div class="modal-btns">
+        <button class="btn btn-primary" @click="showNutrition = false" style="grid-column: span 2">
+          知道了
+        </button>
       </div>
     </div></div>
   </div>
@@ -988,7 +1139,9 @@ body { padding-bottom: 30px; }
     <button class="img-viewer-close" @click.stop="closeImgViewer">✕</button>
     <div class="img-viewer-content" @click.stop>
       <img v-if="imgViewer.src" :src="imgViewer.src" :alt="imgViewer.name" class="img-viewer-img">
-      <div class="img-viewer-title" v-if="imgViewer.name">{{ imgViewer.name }}</div>
+      <div class="img-viewer-title" v-if="imgViewer.name">
+        {{ imgViewer.name }}<span class="py py-light" v-if="imgViewer.py">[{{ imgViewer.py }}]</span>
+      </div>
     </div>
   </div>
 
@@ -1022,75 +1175,75 @@ const allItemsData = [
   { n: "芝麻菜", c: "叶菜", tag: "", icon: "🥬", img: "img/芝麻菜.jpg" },
 
   // ============ 根茎 ============
-  { n: "土豆", c: "根茎", tag: "", icon: "🥔", img: "" },
-  { n: "胡萝卜", c: "根茎", tag: "", icon: "🥕", img: "" },
-  { n: "白萝卜", c: "根茎", tag: "冬", icon: "🫚", img: "" },
-  { n: "洋葱", c: "根茎", tag: "", icon: "🧅", img: "" },
+  { n: "土豆", c: "根茎", tag: "", icon: "🥔", img: "img/土豆.jpg" },
+  { n: "胡萝卜", c: "根茎", tag: "", icon: "🥕", img: "img/胡萝卜.jpg" },
+  { n: "白萝卜", c: "根茎", tag: "冬", icon: "🫚", img: "img/白萝卜.jpg" },
+  { n: "洋葱", c: "根茎", tag: "", icon: "🧅", img: "img/洋葱.jpg" },
   { n: "大蒜", c: "根茎", tag: "", icon: "🧄", img: "" },
   { n: "生姜", c: "根茎", tag: "", icon: "🫚", img: "" },
-  { n: "山药", c: "根茎", tag: "秋冬", icon: "🫚", img: "" },
-  { n: "莲藕", c: "根茎", tag: "秋", icon: "🫚", img: "" },
-  { n: "芋头", c: "根茎", tag: "秋", icon: "🫚", img: "" },
-  { n: "红薯", c: "根茎", tag: "秋冬", icon: "🍠", img: "" },
-  { n: "紫薯", c: "根茎", tag: "秋冬", icon: "🍠", img: "" },
-  { n: "莴笋", c: "根茎", tag: "春", icon: "🫚", img: "" },
-  { n: "茭白", c: "根茎", tag: "夏", icon: "🫚", img: "" },
-  { n: "芦笋", c: "根茎", tag: "春", icon: "🫚", img: "" },
-  { n: "荸荠", c: "根茎", tag: "冬", icon: "🫚", img: "" },
-  { n: "牛蒡", c: "根茎", tag: "", icon: "🫚", img: "" },
-  { n: "芥菜头", c: "根茎", tag: "", icon: "🫚", img: "" },
+  { n: "山药", c: "根茎", tag: "秋冬", icon: "🫚", img: "img/山药.jpg" },
+  { n: "莲藕", c: "根茎", tag: "秋", icon: "🫚", img: "img/莲藕.jpg" },
+  { n: "芋头", c: "根茎", tag: "秋", icon: "🫚", img: "img/芋头.jpg" },
+  { n: "红薯", c: "根茎", tag: "秋冬", icon: "🍠", img: "img/红薯.jpg" },
+  { n: "紫薯", c: "根茎", tag: "秋冬", icon: "🍠", img: "img/紫薯.webp" },
+  { n: "莴笋", c: "根茎", tag: "春", icon: "🫚", img: "img/莴笋.png" },
+  { n: "茭白", c: "根茎", tag: "夏", icon: "🫚", img: "img/茭白.jpg" },
+  { n: "芦笋", c: "根茎", tag: "春", icon: "🫚", img: "img/芦笋.jpg" },
+  { n: "荸荠", c: "根茎", tag: "冬", icon: "🫚", img: "img/荸荠.webp" },
+  { n: "牛蒡", c: "根茎", tag: "", icon: "🫚", img: "img/牛蒡.webp" },
+  { n: "芥菜头", c: "根茎", tag: "", icon: "🫚", img: "img/芥菜头.jpg" },
 
   // ============ 瓜果 ============
-  { n: "番茄", c: "瓜果", tag: "", icon: "🍅", img: "" },
-  { n: "黄瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
-  { n: "青椒", c: "瓜果", tag: "", icon: "🫑", img: "" },
-  { n: "茄子", c: "瓜果", tag: "夏", icon: "🍆", img: "" },
-  { n: "冬瓜", c: "瓜果", tag: "夏", icon: "🍈", img: "" },
-  { n: "南瓜", c: "瓜果", tag: "秋", icon: "🎃", img: "" },
-  { n: "丝瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
-  { n: "苦瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
-  { n: "西葫芦", c: "瓜果", tag: "夏", icon: "🥒", img: "" },
-  { n: "豆角", c: "瓜果", tag: "夏", icon: "🫘", img: "" },
-  { n: "四季豆", c: "瓜果", tag: "夏", icon: "🫘", img: "" },
-  { n: "荷兰豆", c: "瓜果", tag: "冬春", icon: "🫘", img: "" },
-  { n: "玉米", c: "瓜果", tag: "夏", icon: "🌽", img: "" },
-  { n: "秋葵", c: "瓜果", tag: "夏", icon: "🫛", img: "" },
-  { n: "辣椒", c: "瓜果", tag: "", icon: "🌶️", img: "" },
-  { n: "彩椒", c: "瓜果", tag: "", icon: "🫑", img: "" },
-  { n: "佛手瓜", c: "瓜果", tag: "", icon: "🥒", img: "" },
+  { n: "番茄", c: "瓜果", tag: "", icon: "🍅", img: "img/番茄.webp" },
+  { n: "黄瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "img/黄瓜.jpg" },
+  { n: "青椒", c: "瓜果", tag: "", icon: "🫑", img: "img/青椒.jpg" },
+  { n: "茄子", c: "瓜果", tag: "夏", icon: "🍆", img: "img/茄子.jpg" },
+  { n: "冬瓜", c: "瓜果", tag: "夏", icon: "🍈", img: "img/冬瓜.png" },
+  { n: "南瓜", c: "瓜果", tag: "秋", icon: "🎃", img: "img/南瓜.webp" },
+  { n: "丝瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "img/丝瓜.jpg" },
+  { n: "苦瓜", c: "瓜果", tag: "夏", icon: "🥒", img: "img/苦瓜.jpg" },
+  { n: "西葫芦", c: "瓜果", tag: "夏", icon: "🥒", img: "img/西葫芦.jpg" },
+  { n: "豆角", c: "瓜果", tag: "夏", icon: "🫘", img: "img/豆角.jpg" },
+  { n: "四季豆", c: "瓜果", tag: "夏", icon: "🫘", img: "img/四季豆.jpg" },
+  { n: "荷兰豆", c: "瓜果", tag: "冬春", icon: "🫘", img: "img/荷兰豆.jpg" },
+  { n: "玉米", c: "瓜果", tag: "夏", icon: "🌽", img: "img/玉米.jpg" },
+  { n: "秋葵", c: "瓜果", tag: "夏", icon: "🫛", img: "img/秋葵.jpg" },
+  { n: "辣椒", c: "瓜果", tag: "", icon: "🌶️", img: "img/辣椒.jpg" },
+  { n: "彩椒", c: "瓜果", tag: "", icon: "🫑", img: "img/彩椒.jpg" },
+  { n: "佛手瓜", c: "瓜果", tag: "", icon: "🥒", img: "img/佛手瓜.jpg" },
 
   // ============ 菌菇 ============
-  { n: "香菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "平菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "金针菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "口蘑", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "杏鲍菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "海鲜菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "蟹味菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "白玉菇", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "木耳", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "银耳", c: "菌菇", tag: "", icon: "🍄", img: "" },
-  { n: "虫草花", c: "菌菇", tag: "", icon: "🍄", img: "" },
+  { n: "香菇", c: "菌菇", tag: "", icon: "🍄", img: "img/香菇.jpg" },
+  { n: "平菇", c: "菌菇", tag: "", icon: "🍄", img: "img/平菇.jpg" },
+  { n: "金针菇", c: "菌菇", tag: "", icon: "🍄", img: "img/金针菇.jpg" },
+  { n: "口蘑", c: "菌菇", tag: "", icon: "🍄", img: "img/口蘑.jpg" },
+  { n: "杏鲍菇", c: "菌菇", tag: "", icon: "🍄", img: "img/杏鲍菇.jpg" },
+  { n: "海鲜菇", c: "菌菇", tag: "", icon: "🍄", img: "img/海鲜菇.jpg" },
+  { n: "蟹味菇", c: "菌菇", tag: "", icon: "🍄", img: "img/蟹味菇.jpg" },
+  { n: "白玉菇", c: "菌菇", tag: "", icon: "🍄", img: "img/白玉菇.jpg" },
+  { n: "木耳", c: "菌菇", tag: "", icon: "🍄", img: "img/木耳.jpg" },
+  { n: "银耳", c: "菌菇", tag: "", icon: "🍄", img: "img/银耳.webp" },
+  { n: "虫草花", c: "菌菇", tag: "", icon: "🍄", img: "img/虫草花.jpg" },
 
   // ============ 豆制品 ============
-  { n: "豆腐", c: "豆制品", tag: "", icon: "🧊", img: "" },
-  { n: "老豆腐", c: "豆制品", tag: "", icon: "🧊", img: "" },
-  { n: "嫩豆腐", c: "豆制品", tag: "", icon: "🧊", img: "" },
-  { n: "豆皮", c: "豆制品", tag: "", icon: "🫘", img: "" },
-  { n: "腐竹", c: "豆制品", tag: "", icon: "🫘", img: "" },
-  { n: "豆干", c: "豆制品", tag: "", icon: "🧊", img: "" },
-  { n: "千张", c: "豆制品", tag: "", icon: "🫘", img: "" },
+  { n: "豆腐", c: "豆制品", tag: "", icon: "🧊", img: "img/豆腐.jpg" },
+  { n: "老豆腐", c: "豆制品", tag: "", icon: "🧊", img: "img/老豆腐.jpg" },
+  { n: "嫩豆腐", c: "豆制品", tag: "", icon: "🧊", img: "img/嫩豆腐.jpg" },
+  { n: "豆皮", c: "豆制品", tag: "", icon: "🫘", img: "img/豆皮.jpg" },
+  { n: "腐竹", c: "豆制品", tag: "", icon: "🫘", img: "img/腐竹.webp" },
+  { n: "豆干", c: "豆制品", tag: "", icon: "🧊", img: "img/豆干.jpg" },
+  { n: "千张", c: "豆制品", tag: "", icon: "🫘", img: "img/千张.jpg" },
   { n: "素鸡", c: "豆制品", tag: "", icon: "🧊", img: "" },
 
   // ============ 调味 ============
-  { n: "葱", c: "调味", tag: "", icon: "🌰", img: "" },
-  { n: "姜", c: "调味", tag: "", icon: "🫚", img: "" },
-  { n: "蒜", c: "调味", tag: "", icon: "🧄", img: "" },
-  { n: "干辣椒", c: "调味", tag: "", icon: "🌶️", img: "" },
-  { n: "花椒", c: "调味", tag: "", icon: "🌰", img: "" },
-  { n: "八角", c: "调味", tag: "", icon: "🌰", img: "" },
-  { n: "香叶", c: "调味", tag: "", icon: "🌿", img: "" },
-  { n: "桂皮", c: "调味", tag: "", icon: "🌰", img: "" },
+  { n: "葱", c: "调味", tag: "", icon: "🌰", img: "img/葱.webp" },
+  { n: "姜", c: "调味", tag: "", icon: "🫚", img: "img/姜.jpg" },
+  { n: "蒜", c: "调味", tag: "", icon: "🧄", img: "img/蒜.jpg" },
+  { n: "干辣椒", c: "调味", tag: "", icon: "🌶️", img: "img/干辣椒.jpg" },
+  { n: "花椒", c: "调味", tag: "", icon: "🌰", img: "img/花椒.jpg" },
+  { n: "八角", c: "调味", tag: "", icon: "🌰", img: "img/八角.jpg" },
+  { n: "香叶", c: "调味", tag: "", icon: "🌿", img: "img/香叶.jpg" },
+  { n: "桂皮", c: "调味", tag: "", icon: "🌰", img: "img/桂皮.jpg" },
   { n: "料酒", c: "调味", tag: "", icon: "🍶", img: "" },
   { n: "生抽", c: "调味", tag: "", icon: "🍶", img: "" },
   { n: "老抽", c: "调味", tag: "", icon: "🍶", img: "" },
@@ -1151,6 +1304,981 @@ const allItemsData = [
   { n: "玉米粒", c: "其他", tag: "", icon: "🌽", img: "" }
 ];
 
+/* ==================== 菜名拼音（带声调，显示在菜名旁边） ==================== */
+const pinyinData = {
+  // 叶菜
+  "菠菜": "bō cài",
+  "油麦菜": "yóu mài cài",
+  "空心菜": "kōng xīn cài",
+  "苋菜": "xiàn cài",
+  "茼蒿": "tóng hāo",
+  "韭菜": "jiǔ cài",
+  "香菜": "xiāng cài",
+  "小白菜": "xiǎo bái cài",
+  "黄心大白菜": "huáng xīn dà bái cài",
+  "生菜": "shēng cài",
+  "芹菜": "qín cài",
+  "芥蓝": "gài lán",
+  "菜心": "cài xīn",
+  "上海青": "shàng hǎi qīng",
+  "鸡毛菜": "jī máo cài",
+  "木耳菜": "mù ěr cài",
+  "红薯叶": "hóng shǔ yè",
+  "苦苣": "kǔ qǔ",
+  "芝麻菜": "zhī ma cài",
+
+  // 根茎
+  "土豆": "tǔ dòu",
+  "胡萝卜": "hú luó bo",
+  "白萝卜": "bái luó bo",
+  "洋葱": "yáng cōng",
+  "大蒜": "dà suàn",
+  "生姜": "shēng jiāng",
+  "山药": "shān yào",
+  "莲藕": "lián ǒu",
+  "芋头": "yù tou",
+  "红薯": "hóng shǔ",
+  "紫薯": "zǐ shǔ",
+  "莴笋": "wō sǔn",
+  "茭白": "jiāo bái",
+  "芦笋": "lú sǔn",
+  "荸荠": "bí qi",
+  "牛蒡": "niú bàng",
+  "芥菜头": "jiè cài tóu",
+
+  // 瓜果
+  "番茄": "fān qié",
+  "黄瓜": "huáng guā",
+  "青椒": "qīng jiāo",
+  "茄子": "qié zi",
+  "冬瓜": "dōng guā",
+  "南瓜": "nán guā",
+  "丝瓜": "sī guā",
+  "苦瓜": "kǔ guā",
+  "西葫芦": "xī hú lu",
+  "豆角": "dòu jiǎo",
+  "四季豆": "sì jì dòu",
+  "荷兰豆": "hé lán dòu",
+  "玉米": "yù mǐ",
+  "秋葵": "qiū kuí",
+  "辣椒": "là jiāo",
+  "彩椒": "cǎi jiāo",
+  "佛手瓜": "fó shǒu guā",
+
+  // 菌菇
+  "香菇": "xiāng gū",
+  "平菇": "píng gū",
+  "金针菇": "jīn zhēn gū",
+  "口蘑": "kǒu mó",
+  "杏鲍菇": "xìng bào gū",
+  "海鲜菇": "hǎi xiān gū",
+  "蟹味菇": "xiè wèi gū",
+  "白玉菇": "bái yù gū",
+  "木耳": "mù ěr",
+  "银耳": "yín ěr",
+  "虫草花": "chóng cǎo huā",
+
+  // 豆制品
+  "豆腐": "dòu fu",
+  "老豆腐": "lǎo dòu fu",
+  "嫩豆腐": "nèn dòu fu",
+  "豆皮": "dòu pí",
+  "腐竹": "fǔ zhú",
+  "豆干": "dòu gān",
+  "千张": "qiān zhāng",
+  "素鸡": "sù jī",
+
+  // 调味
+  "葱": "cōng",
+  "姜": "jiāng",
+  "蒜": "suàn",
+  "干辣椒": "gān là jiāo",
+  "花椒": "huā jiāo",
+  "八角": "bā jiǎo",
+  "香叶": "xiāng yè",
+  "桂皮": "guì pí",
+  "料酒": "liào jiǔ",
+  "生抽": "shēng chōu",
+  "老抽": "lǎo chōu",
+  "蚝油": "háo yóu",
+  "醋": "cù",
+  "香油": "xiāng yóu",
+  "豆瓣酱": "dòu bàn jiàng",
+
+  // 肉类
+  "五花肉": "wǔ huā ròu",
+  "里脊肉": "lǐ ji ròu",
+  "排骨": "pái gǔ",
+  "鸡腿肉": "jī tuǐ ròu",
+  "鸡胸肉": "jī xiōng ròu",
+  "牛肉": "niú ròu",
+  "牛腩": "niú nǎn",
+  "羊肉": "yáng ròu",
+  "猪蹄": "zhū tí",
+  "鸡翅": "jī chì",
+  "鸡爪": "jī zhuǎ",
+  "鸭肉": "yā ròu",
+  "鸭翅": "yā chì",
+  "培根": "péi gēn",
+  "火腿": "huǒ tuǐ",
+  "腊肉": "là ròu",
+  "香肠": "xiāng cháng",
+
+  // 水产
+  "鲫鱼": "jì yú",
+  "草鱼": "cǎo yú",
+  "鲈鱼": "lú yú",
+  "带鱼": "dài yú",
+  "虾": "xiā",
+  "基围虾": "jī wéi xiā",
+  "螃蟹": "páng xiè",
+  "花蛤": "huā gé",
+  "蛏子": "chēng zi",
+  "鱿鱼": "yóu yú",
+  "墨鱼": "mò yú",
+  "生蚝": "shēng háo",
+
+  // 蛋禽
+  "鸡蛋": "jī dàn",
+  "鸭蛋": "yā dàn",
+  "鹌鹑蛋": "ān chún dàn",
+  "皮蛋": "pí dàn",
+  "咸鸭蛋": "xián yā dàn",
+
+  // 其他
+  "海带": "hǎi dài",
+  "紫菜": "zǐ cài",
+  "花生": "huā shēng",
+  "板栗": "bǎn lì",
+  "西兰花": "xī lán huā",
+  "花菜": "huā cài",
+  "豌豆": "wān dòu",
+  "蚕豆": "cán dòu",
+  "玉米粒": "yù mǐ lì"
+};
+
+// 把拼音挂到食材数据上；自选添加的食材查不到拼音时自动不显示
+// 同时生成搜索用的字段：py 去声调拼音、pyc 去声调连写、ini 拼音首字母
+allItemsData.forEach(item => {
+  const py = pinyinData[item.n] || '';
+  item.p = py;                                                    // 带声调，用于显示 [bō cài]
+  item.py = py.normalize('NFD').replace(/[\u0300-\u036f]/g, '');   // bo cai
+  item.pyc = item.py.replace(/\s+/g, '');                          // bocai
+  item.ini = py ? py.split(/\s+/).map(s => s[0]).join('') : '';    // bc
+});
+
+/* ==================== 营养价值（目前先收录叶菜，其余待补） ==================== */
+const nutritionData = {
+  "菠菜": {
+    sum: "叶酸和铁在叶菜里都算靠前，家常的补铁叶菜",
+    nutri: "每 100g 约 28 千卡；富含叶酸、维生素 K、铁、钾和胡萝卜素",
+    eat: "草酸偏高，先焯水 30 秒再炒或凉拌，钙才吸收得好",
+    tip: "有肾结石病史的人要控制量，焯水能去掉大部分草酸"
+  },
+  "油麦菜": {
+    sum: "清脆微苦，热量很低，纤维不错",
+    nutri: "每 100g 约 15 千卡；含膳食纤维、维生素 C、钾和少量胡萝卜素",
+    eat: "大火快炒或涮锅，时间越短越脆嫩，维生素损失也越少",
+    tip: "微苦味来自莴苣素，能开胃；脾胃虚寒的人别一次吃太多"
+  },
+  "空心菜": {
+    sum: "夏天当季的时令菜，钙在叶菜里算高",
+    nutri: "每 100g 约 20 千卡；含钙、钾、维生素 C、膳食纤维和胡萝卜素",
+    eat: "梗和叶分开下锅，梗先炒十几秒再放叶，蒜末提香",
+    tip: "性偏寒凉，脾胃虚寒、容易腹泻的人少吃"
+  },
+  "苋菜": {
+    sum: "钙和铁都比较突出，老话说“六月苋，当鸡蛋”",
+    nutri: "每 100g 约 25 千卡；钙、铁、钾含量都不低，草酸偏高会拉低钙的吸收率",
+    eat: "焯水后蒜炒或做汤，红苋菜的汤汁拌饭很下饭",
+    tip: "焯水能去掉大部分草酸；脾胃虚寒的人别多吃"
+  },
+  "茼蒿": {
+    sum: "自带清香，胡萝卜素含量在叶菜里偏高",
+    nutri: "每 100g 约 21 千卡；胡萝卜素、钾、膳食纤维丰富，含维生素 C",
+    eat: "涮火锅或清炒，下锅十几秒就够，久煮香气就没了",
+    tip: "香气来自挥发油，胃寒、腹泻时少吃"
+  },
+  "韭菜": {
+    sum: "纤维粗、味道冲，传统上说温补，春韭最鲜",
+    nutri: "每 100g 约 26 千卡；含膳食纤维、胡萝卜素、维生素 C 和含硫化合物",
+    eat: "炒鸡蛋、包饺子都合适，大火快炒不容易出水",
+    tip: "纤维粗，胃肠不好的人别多吃；吃完口气重可以嚼点茶叶"
+  },
+  "香菜": {
+    sum: "提味小菜，维生素 C 和胡萝卜素不低",
+    nutri: "每 100g 约 30 千卡；含维生素 C、胡萝卜素、钾和挥发油",
+    eat: "出锅前撒一把，香气保留最好；凉拌也很提味",
+    tip: "气味来自醛类物质，有人天生接受不了，属正常现象"
+  },
+  "小白菜": {
+    sum: "清淡水分足，钙和维生素 C 都不错",
+    nutri: "每 100g 约 15 千卡；含钙、维生素 C、钾和膳食纤维",
+    eat: "蒜蓉清炒或做汤，梗先下锅、叶子后放",
+    tip: "性偏凉，炒的时候加两片姜更顺口"
+  },
+  "黄心大白菜": {
+    sum: "水分足热量低，冬天主打菜，维生素 C 比想象中高",
+    nutri: "每 100g 约 18 千卡；含维生素 C、钾、膳食纤维和少量钙",
+    eat: "炖、炒、做馅都行，炖肉时后放，久煮更甜",
+    tip: "维生素 C 怕久煮，想留住就快炒"
+  },
+  "生菜": {
+    sum: "可以生吃，水分多、热量极低",
+    nutri: "每 100g 约 13 千卡；含维生素 C、叶酸、钾和膳食纤维",
+    eat: "生吃、包肉、涮锅都行，生吃营养损失最少，但一定要流水逐片洗净沥干",
+    tip: "孕妇、免疫力低的人尽量焯一下再吃；脾胃虚寒的人别贪凉"
+  },
+  "芹菜": {
+    sum: "纤维粗，钾含量在叶菜里偏高",
+    nutri: "每 100g 约 16 千卡；钾、膳食纤维、维生素 K 和芹菜素较丰富",
+    eat: "切段快炒或焯水凉拌，叶子别全扔，胡萝卜素比梗还高",
+    tip: "芹菜是菜不是药，血压方面的问题请听医生的"
+  },
+  "芥蓝": {
+    sum: "脆嫩微苦，钙和维生素 C 都比较高",
+    nutri: "每 100g 约 24 千卡；含钙、维生素 C、胡萝卜素和膳食纤维",
+    eat: "焯水后淋蚝油，或蒜蓉快炒；梗粗的先焯一下",
+    tip: "焯水别超过一分钟，久了发黄变软"
+  },
+  "菜心": {
+    sum: "清甜脆嫩，广东餐桌上的常客",
+    nutri: "每 100g 约 20 千卡；含维生素 C、钙、钾和膳食纤维",
+    eat: "白灼最经典，水开下锅一分钟捞出，淋生抽和热油",
+    tip: "挑花蕾没开的更嫩；久煮会发黄"
+  },
+  "上海青": {
+    sum: "钙在叶菜里靠前，口感清甜",
+    nutri: "每 100g 约 18 千卡；含钙、维生素 C、钾和胡萝卜素",
+    eat: "整棵快炒或白灼，梗先入锅、叶子后放",
+    tip: "草酸比菠菜低，不必特意焯水"
+  },
+  "鸡毛菜": {
+    sum: "小白菜的嫩苗，更嫩更甜，维生素 C 高",
+    nutri: "每 100g 约 15 千卡；含维生素 C、钙、叶酸和膳食纤维",
+    eat: "做汤或快炒，下锅就熟，别久煮",
+    tip: "叶片薄容易蔫，买回来当天吃最好"
+  },
+  "木耳菜": {
+    sum: "叶片肥厚滑嫩，钙和胡萝卜素都不低",
+    nutri: "每 100g 约 20 千卡；含钙、胡萝卜素、维生素 C 和膳食纤维",
+    eat: "蒜蓉快炒或做汤，炒出黏液是正常的",
+    tip: "性偏寒凉，脾胃虚寒、容易拉肚子的人少吃"
+  },
+  "红薯叶": {
+    sum: "以前喂猪、现在上桌，胡萝卜素和钙都很突出",
+    nutri: "每 100g 约 30 千卡；胡萝卜素、钙、铁、维生素 C 含量都高",
+    eat: "撕掉老梗，蒜蓉大火快炒，梗先下、叶后下",
+    tip: "不要生吃；掐不动的老梗纤维太粗，去掉"
+  },
+  "苦苣": {
+    sum: "苦味清爽，热量低，常做沙拉",
+    nutri: "每 100g 约 17 千卡；含维生素 C、钾、叶酸和苦味物质",
+    eat: "生吃拌沙拉最省事；怕苦就先泡十分钟冰水",
+    tip: "性寒，脾胃虚寒的人少吃"
+  },
+  "芝麻菜": {
+    sum: "有芝麻和辣根的辛香，西餐沙拉常用",
+    nutri: "每 100g 约 25 千卡；含维生素 C、维生素 K、叶酸和芥子油苷",
+    eat: "生吃拌沙拉，或铺在三明治、披萨上，加热久了香气会散",
+    tip: "辛味来自芥子油苷，甲状腺功能异常的人别长期大量吃"
+  },
+
+  /* ---------- 根茎 ---------- */
+  "土豆": {
+    sum: "主食也能当菜，钾和维生素 C 都不少",
+    nutri: "每 100g 约 77 千卡；含钾、维生素 C、膳食纤维，淀粉含量高",
+    eat: "炒丝、炖块、做泥都行；想少油就蒸或煮，当主食吃要相应减饭量",
+    tip: "发芽、变绿、长黑斑的土豆含龙葵素，别吃，直接扔掉；只把芽眼挖掉也不保险"
+  },
+  "胡萝卜": {
+    sum: "胡萝卜素含量在蔬菜里数一数二",
+    nutri: "每 100g 约 39 千卡；富含 β-胡萝卜素、钾和膳食纤维",
+    eat: "胡萝卜素是脂溶性的，用油炒或和肉一起炖，吸收率更高",
+    tip: "长期大量吃皮肤会发黄，停吃几天就恢复，不用担心"
+  },
+  "白萝卜": {
+    sum: "水分多、热量低，冬天炖汤的主力",
+    nutri: "每 100g 约 21 千卡；含维生素 C、钾和膳食纤维，水分约 95%",
+    eat: "炖汤、腌制、凉拌都行；生吃辛辣味重，怕辣就先焯一下",
+    tip: "性偏凉，脾胃虚寒、容易腹泻的人别生吃太多"
+  },
+  "洋葱": {
+    sum: "切开会辣眼睛，炒熟之后反而发甜",
+    nutri: "每 100g 约 40 千卡；含钾、维生素 C、膳食纤维和含硫化合物",
+    eat: "炒蛋、炒肉、做汤都合适；生吃辛辣，怕辣可以先泡一下凉水",
+    tip: "切之前放冰箱冰十分钟，或者在水里切，能少流眼泪"
+  },
+  "大蒜": {
+    sum: "提味为主，捣碎后放一会儿再下锅更香",
+    nutri: "每 100g 约 128 千卡；含大蒜素等含硫化合物、钾和硒",
+    eat: "拍碎后放 10 分钟再下锅，蒜香更足；爆香时别炸糊，会发苦",
+    tip: "生蒜刺激胃，空腹别吃太多；吃完喝牛奶或嚼茶叶能去味"
+  },
+  "生姜": {
+    sum: "去腥提鲜的家常佐料",
+    nutri: "每 100g 约 41 千卡；含姜辣素等挥发油、钾和少量维生素 C",
+    eat: "炖肉、蒸鱼、炒菜都放几片；嫩姜可以腌着吃，辣味轻",
+    tip: "烂姜会产生有害物质，烂了就整块扔，别切掉烂的部分接着用"
+  },
+  "山药": {
+    sum: "口感粉糯，淀粉和黏液质都不少",
+    nutri: "每 100g 约 57 千卡；含淀粉、钾、膳食纤维和黏液质",
+    eat: "蒸、炖、煲汤都行；铁棍山药粉糯适合蒸，脆山药适合炒",
+    tip: "削皮时黏液里的皂苷和草酸钙针晶会让手发痒，戴手套最稳妥；万一沾上用温水冲洗，别揉眼睛"
+  },
+  "莲藕": {
+    sum: "脆藕炒、粉藕炖，口感差别很大",
+    nutri: "每 100g 约 73 千卡；含淀粉、维生素 C、钾和膳食纤维",
+    eat: "七孔藕偏粉适合炖汤，九孔藕偏脆适合凉拌快炒",
+    tip: "切开后泡在清水里滴几滴醋，能防止发黑"
+  },
+  "芋头": {
+    sum: "粉糯饱腹，淀粉含量比一般蔬菜高",
+    nutri: "每 100g 约 79 千卡；含淀粉、钾、膳食纤维和少量维生素 C",
+    eat: "蒸熟直接吃、炖肉、做芋泥都行；当主食吃就少盛点饭",
+    tip: "生芋头的黏液会刺激皮肤，削皮戴手套，一定要做熟再吃"
+  },
+  "红薯": {
+    sum: "自带甜味，膳食纤维比米面多",
+    nutri: "每 100g 约 86 千卡；含膳食纤维、β-胡萝卜素、钾和维生素 C",
+    eat: "蒸、烤、煮粥都行；带皮蒸营养损失少，烤过之后糖分更集中",
+    tip: "长黑斑、发硬发苦的红薯已经变质，别吃"
+  },
+  "紫薯": {
+    sum: "紫色来自花青素，口感比红薯更粉",
+    nutri: "每 100g 约 82 千卡；含花青素、膳食纤维、钾和维生素 C",
+    eat: "蒸、煮、做泥都行；蒸比煮更能留住花青素",
+    tip: "和红薯一样，长黑斑、有异味的别吃"
+  },
+  "莴笋": {
+    sum: "脆嫩多汁，热量很低",
+    nutri: "每 100g 约 15 千卡；含钾、膳食纤维和少量维生素 C",
+    eat: "切丝凉拌或快炒都行，叶子也别扔，炒着吃很清爽",
+    tip: "久炒会出水变软，大火快炒一两分钟就够"
+  },
+  "茭白": {
+    sum: "口感像嫩笋，夏天当季",
+    nutri: "每 100g 约 23 千卡；含膳食纤维、钾和少量维生素 C",
+    eat: "切丝炒肉、油焖都好吃；炒前先焯一下去涩味",
+    tip: "草酸偏高，焯水后再炒；脾胃虚寒的人少吃"
+  },
+  "芦笋": {
+    sum: "脆嫩清香，叶酸含量在蔬菜里靠前",
+    nutri: "每 100g 约 19 千卡；含叶酸、维生素 K、膳食纤维和芦丁",
+    eat: "焯水后淋汁或快炒；根部老的部分削掉，或者掰断后只用嫩的一段",
+    tip: "久煮会发黄变软，焯水一分钟就够"
+  },
+  "荸荠": {
+    sum: "脆甜多汁，熟吃最安心",
+    nutri: "每 100g 约 61 千卡；含淀粉、钾、膳食纤维和少量维生素 C",
+    eat: "去皮后炒、炖、做丸子都行，熟吃更安全",
+    tip: "别生吃，荸荠皮上可能附着姜片虫囊蚴，一定要煮熟；也别用嘴啃皮"
+  },
+  "牛蒡": {
+    sum: "纤维粗、口感偏柴，日本料理里常见",
+    nutri: "每 100g 约 72 千卡；含膳食纤维、钾和菊糖",
+    eat: "切丝炒或炖汤，削皮后泡醋水可以防止发黑",
+    tip: "纤维很粗，胃肠不好的人别一次吃太多"
+  },
+  "芥菜头": {
+    sum: "辛辣味冲，腌成榨菜最出名",
+    nutri: "每 100g 约 24 千卡；含维生素 C、钾和膳食纤维",
+    eat: "切片炒肉、腌渍、煮汤都行；生吃辛辣，怕辣就先焯水",
+    tip: "腌成榨菜后含盐很高，当咸菜吃就要少放盐"
+  },
+
+  /* ---------- 瓜果 ---------- */
+  "番茄": {
+    sum: "生吃当水果，熟吃番茄红素更好吸收",
+    nutri: "每 100g 约 20 千卡；含番茄红素、维生素 C、钾和膳食纤维",
+    eat: "加油炒熟吃，番茄红素吸收率更高；生吃维生素 C 保留更全",
+    tip: "没熟的青番茄含番茄碱等生物碱，别吃，放红了再吃"
+  },
+  "黄瓜": {
+    sum: "水分足、热量低，生吃很清爽",
+    nutri: "每 100g 约 16 千卡；水分约 95%，含钾、维生素 C 和膳食纤维",
+    eat: "拍黄瓜、凉拌、快炒都行；生吃前洗净，表皮搓一搓",
+    tip: "性偏凉，脾胃虚寒的人别一次吃太多凉拌的"
+  },
+  "青椒": {
+    sum: "维生素 C 含量比很多水果都高",
+    nutri: "每 100g 约 22 千卡；富含维生素 C、胡萝卜素和钾",
+    eat: "急火快炒或切丝凉拌；炒久了维生素 C 损失多",
+    tip: "怕辣就去掉里面的白色筋膜和籽"
+  },
+  "茄子": {
+    sum: "特别能吸油，做法直接决定热量",
+    nutri: "每 100g 约 23 千卡；含膳食纤维、钾和花青素类物质",
+    eat: "先蒸软再炒，或者直接烤，能少吸不少油",
+    tip: "茄子本身热量低，但油焖、油炸之后热量会翻几倍"
+  },
+  "冬瓜": {
+    sum: "水分最多、热量最低的瓜之一",
+    nutri: "每 100g 约 12 千卡；水分约 96%，含钾和少量维生素 C",
+    eat: "炖汤、烧肉都行，久炖不烂，很适合配荤菜解腻",
+    tip: "性偏凉，脾胃虚寒的人别光喝冬瓜汤"
+  },
+  "南瓜": {
+    sum: "自带甜味，胡萝卜素含量高",
+    nutri: "每 100g 约 23 千卡；含 β-胡萝卜素、钾、膳食纤维和淀粉",
+    eat: "蒸、煮粥、烤都行；老南瓜更甜适合蒸，嫩南瓜适合炒",
+    tip: "含糖量和升糖速度比一般叶菜高，需要控糖的人算进主食里"
+  },
+  "丝瓜": {
+    sum: "嫩的时候清甜多汁，夏天当季",
+    nutri: "每 100g 约 20 千卡；含维生素 C、钾和膳食纤维",
+    eat: "做汤或快炒，炒到刚软就出锅，久了会发黑出水",
+    tip: "挑手感轻、捏着有弹性的嫩瓜，老的纤维粗，只能留种"
+  },
+  "苦瓜": {
+    sum: "苦味明显，夏天常见，热量很低",
+    nutri: "每 100g 约 19 千卡；含维生素 C、钾和苦瓜苷等苦味物质",
+    eat: "切片用盐抓一下或者焯水，能去掉一部分苦味",
+    tip: "性偏寒凉，脾胃虚寒的人少吃；血糖方面的问题请听医生的"
+  },
+  "西葫芦": {
+    sum: "水分多、味道清淡，很百搭",
+    nutri: "每 100g 约 19 千卡；含钾、维生素 C 和膳食纤维",
+    eat: "擦丝做饼、切片快炒、做馅都行；嫩的不用削皮",
+    tip: "炒的时候容易出水，火要大、时间要短"
+  },
+  "豆角": {
+    sum: "夏天的当家菜，但一定要做熟",
+    nutri: "每 100g 约 30 千卡；含植物蛋白、膳食纤维、钾和叶酸",
+    eat: "干煸、炖肉、焯水凉拌都行，但必须彻底炒熟炖透",
+    tip: "半生的豆角含皂苷和植物凝集素，吃了会恶心腹泻，宁可多炖一会儿"
+  },
+  "四季豆": {
+    sum: "口感脆嫩，同样是必须熟透的豆",
+    nutri: "每 100g 约 31 千卡；含植物蛋白、膳食纤维、钾和叶酸",
+    eat: "先焯水三分钟再炒，或者多炒一会儿，看到颜色变深绿才安全",
+    tip: "没熟透会引起中毒，别为了脆嫩下锅就出"
+  },
+  "荷兰豆": {
+    sum: "脆甜，炒几下就能吃，但也要炒透",
+    nutri: "每 100g 约 30 千卡；含植物蛋白、维生素 C、膳食纤维和叶酸",
+    eat: "撕掉两边老筋，大火快炒，加蒜末更香",
+    tip: "要炒到颜色变深、断生熟透，别只炒十几秒就出锅"
+  },
+  "玉米": {
+    sum: "当主食比当菜更合适，纤维多",
+    nutri: "每 100g 约 112 千卡；含淀粉、膳食纤维、叶黄素和 B 族维生素",
+    eat: "水煮、蒸、烤都行；煮的时候留两层内皮，更甜",
+    tip: "一根玉米的热量接近一小碗饭，吃了就少盛点米饭"
+  },
+  "秋葵": {
+    sum: "切开有黏液，焯水后凉拌最省事",
+    nutri: "每 100g 约 37 千卡；含膳食纤维、钙、钾和黏液多糖",
+    eat: "整根焯水两分钟再切，黏液流失少；蘸酱油或蒜蓉都好吃",
+    tip: "黏液是它的特点，不用洗掉；性偏凉，脾胃虚寒的人少吃"
+  },
+  "辣椒": {
+    sum: "辣味来自辣椒素，能吃辣的才叫香",
+    nutri: "每 100g 约 32 千卡；富含维生素 C、胡萝卜素和辣椒素",
+    eat: "炒菜、做蘸水、腌都行；怕辣就去籽去筋",
+    tip: "辣度刺激胃肠，胃溃疡、胃食管反流、痔疮发作时别吃"
+  },
+  "彩椒": {
+    sum: "不辣或微辣，维生素 C 比青椒还高",
+    nutri: "每 100g 约 22 千卡；富含维生素 C、胡萝卜素和钾",
+    eat: "生吃拌沙拉、切块快炒、烤都行，颜色好看又脆甜",
+    tip: "久炒会软塌、维生素 C 也流失，快炒或生吃更好"
+  },
+  "佛手瓜": {
+    sum: "脆嫩清淡，产量高、很耐放",
+    nutri: "每 100g 约 16 千卡；含钾、维生素 C 和膳食纤维",
+    eat: "切丝炒、做馅、腌泡都行；嫩瓜皮薄不用削",
+    tip: "性偏凉，脾胃虚寒的人别多吃"
+  },
+
+  /* ---------- 菌菇 ---------- */
+  "香菇": {
+    sum: "鲜味足，晒过之后维生素 D 更多",
+    nutri: "每 100g 约 26 千卡；含香菇多糖、B 族维生素、钾和少量维生素 D",
+    eat: "干香菇泡发后炖肉更香，鲜香菇适合快炒",
+    tip: "泡干香菇的水别倒，滤掉杂质后煮沸再用；泡发别在常温下过夜"
+  },
+  "平菇": {
+    sum: "便宜大碗，口感软嫩",
+    nutri: "每 100g 约 20 千卡；含蛋白质、B 族维生素、钾和膳食纤维",
+    eat: "撕成条炒肉、做汤、涮锅都行；炒前挤一下水更入味",
+    tip: "蘑菇出水多，火要大，别一直小火焖"
+  },
+  "金针菇": {
+    sum: "涮火锅的常客，纤维粗不好消化",
+    nutri: "每 100g 约 32 千卡；含膳食纤维、B 族维生素、钾和锌",
+    eat: "涮锅、凉拌、做汤都行；一定要彻底煮熟，生食或半生容易引起胃肠不适",
+    tip: "纤维很韧，嚼不烂就咽容易噎着，小孩和老人最好切短一点"
+  },
+  "口蘑": {
+    sum: "味道鲜，钾含量在菌菇里不低",
+    nutri: "每 100g 约 25 千卡；含钾、B 族维生素、硒和膳食纤维",
+    eat: "整个煎、切片炒、做汤都行；煎到微黄最香",
+    tip: "别泡水太久，用湿布擦干净再切片，鲜味不流失"
+  },
+  "杏鲍菇": {
+    sum: "肉质感强，切片煎很像在吃荤",
+    nutri: "每 100g 约 31 千卡；含蛋白质、膳食纤维、钾和 B 族维生素",
+    eat: "切厚片煎、手撕炒、烤都行，撒点黑胡椒就很香",
+    tip: "切好后别挤水，煎的时候先别翻动，定型了再翻"
+  },
+  "海鲜菇": {
+    sum: "菌柄长、菌盖小，海鲜味突出，和白玉菇同种不同品系",
+    nutri: "每 100g 约 22 千卡；含膳食纤维、B 族维生素、钾和硒",
+    eat: "涮锅、炒肉、做汤都行，去根后整把下锅",
+    tip: "水分多，炒到微微收干再调味；和白玉菇同是真姬菇，它的菇柄更长、菇伞更小"
+  },
+  "蟹味菇": {
+    sum: "灰色菌盖，蟹味最浓，和海鲜菇、白玉菇同种",
+    nutri: "每 100g 约 22 千卡；含膳食纤维、B 族维生素、钾和锌",
+    eat: "和白玉菇一起炒、涮锅都行，去根后大火快炒更脆",
+    tip: "容易出水变软，火要大、时间要短；它是真姬菇的灰色品系，味道比另外两种更浓"
+  },
+  "白玉菇": {
+    sum: "通体洁白、脆嫩清甜，是海鲜菇的白色品系",
+    nutri: "每 100g 约 22 千卡；含膳食纤维、B 族维生素、钾和硒",
+    eat: "炒、涮、做汤都行，和绿色蔬菜配在一起颜色好看",
+    tip: "去根后洗净沥干再下锅，不然会溅油；和海鲜菇同是真姬菇，它的菇柄和菇伞比例更匀称、颜色更白"
+  },
+  "木耳": {
+    sum: "泡发后脆爽，铁和膳食纤维不少",
+    nutri: "每 100g 约 27 千卡（泡发后）；含铁、膳食纤维、木耳多糖和少量钙",
+    eat: "泡发后焯水凉拌、炒肉、做汤都行",
+    tip: "泡发别超过四小时，天热要放冰箱，隔夜泡发的别吃；泡太久会产生米酵菌酸，加热也去不掉，发黏或有异味就整份扔掉"
+  },
+  "银耳": {
+    sum: "煮出来胶质浓稠，常用来做甜汤",
+    nutri: "每 100g 约 26 千卡（泡发后）；含银耳多糖、膳食纤维、钾和少量蛋白质",
+    eat: "泡发后撕小朵，小火慢炖一小时才出胶",
+    tip: "和木耳一样，泡发别超过四小时、天热放冰箱；煮好当天吃完，别反复加热"
+  },
+  "虫草花": {
+    sum: "颜色金黄，煲汤上色好看",
+    nutri: "每 100g 约 30 千卡；含蛋白质、膳食纤维、B 族维生素和钾",
+    eat: "冲洗后和鸡、排骨一起炖，汤色金黄；别久泡",
+    tip: "它是人工栽培的菌类，不是药材，别当成补品猛吃"
+  },
+
+  /* ---------- 豆制品 ---------- */
+  "豆腐": {
+    sum: "便宜好做的优质植物蛋白来源",
+    nutri: "每 100g 约 82 千卡；含蛋白质约 8g、钙（卤水或石膏点的钙较高，内酯豆腐几乎不含钙）、钾和大豆异黄酮",
+    eat: "煎、炖、做汤、凉拌都行；嫩豆腐适合凉拌，老豆腐适合炖",
+    tip: "豆腐容易坏，买回来当天吃，或者泡在凉水里冷藏"
+  },
+  "老豆腐": {
+    sum: "质地紧实，煎炒不容易碎",
+    nutri: "每 100g 约 98 千卡；含蛋白质约 10g、钙、钾和镁",
+    eat: "煎、炖、红烧都合适，切块后先煎定型再烧",
+    tip: "煎之前用厨房纸吸干表面水分，不容易溅油"
+  },
+  "嫩豆腐": {
+    sum: "口感滑嫩，水分多、蛋白质相对低",
+    nutri: "每 100g 约 50 千卡；含蛋白质约 5g、钙和钾",
+    eat: "凉拌、做汤、蒸蛋都行，用勺子舀着下锅",
+    tip: "特别容易碎，下锅后用勺背推，别用铲子翻"
+  },
+  "豆皮": {
+    sum: "干制品，蛋白质密度比豆腐高",
+    nutri: "每 100g 约 400 千卡（干），泡发后热量大幅稀释；含蛋白质、钙和铁",
+    eat: "泡软后炒、凉拌、涮锅都行；泡发后焯一下去豆腥味",
+    tip: "干豆皮热量高，一次别泡太多；没泡发的密封防潮，泡发后当天吃完，发黏就别吃"
+  },
+  "腐竹": {
+    sum: "豆浆结膜晒干做的，蛋白质很高",
+    nutri: "每 100g 约 459 千卡（干）；含蛋白质约 45g、钙和铁",
+    eat: "凉水泡两三个小时到没有硬心，再烧、炒或者涮锅",
+    tip: "别用热水泡，外面烂了里面还是硬的；干腐竹要防潮防霉"
+  },
+  "豆干": {
+    sum: "压得紧，蛋白质高，也带一点盐",
+    nutri: "每 100g 约 140 千卡；含蛋白质约 16g、钙、钾和镁",
+    eat: "切丝炒肉、凉拌、卤都行；本身有咸味，调味少放盐",
+    tip: "买回来表面发黏、有酸味就别吃了"
+  },
+  "千张": {
+    sum: "薄片豆制品，蛋白质密度高",
+    nutri: "每 100g 约 230 千卡；含蛋白质约 24g、钙、钾和镁",
+    eat: "切丝炒、卷菜、涮锅都行，炒前焯一下更软",
+    tip: "热量和蛋白质都比豆腐高，一次吃半张到一张就够"
+  },
+  "素鸡": {
+    sum: "豆制品做成肉的口感，卤着最好吃",
+    nutri: "每 100g 约 194 千卡；含蛋白质约 17g、钙和钾",
+    eat: "切片卤、红烧、凉拌都行，卤过之后更入味",
+    tip: "卤味含盐高，当配菜吃，别当主菜猛吃"
+  },
+
+  /* ---------- 调味 ---------- */
+  "葱": {
+    sum: "爆香提味，出锅前撒一把更香",
+    nutri: "每 100g 约 30 千卡；含维生素 C、钾和含硫挥发油",
+    eat: "葱白爆锅、葱绿出锅前撒；凉拌菜也少不了",
+    tip: "久炒会发黄发苦，葱绿最后放"
+  },
+  "姜": {
+    sum: "去腥的万金油，和鱼、肉最搭",
+    nutri: "每 100g 约 41 千卡；含姜辣素等挥发油、钾和少量维生素 C",
+    eat: "切片爆锅、蒸鱼垫底、煮汤去腥都行",
+    tip: "烂姜别用，会产生有害物质，整块扔掉"
+  },
+  "蒜": {
+    sum: "生蒜辣、熟蒜香，用法不一样",
+    nutri: "每 100g 约 128 千卡；含大蒜素等含硫化合物、钾和硒",
+    eat: "蒜末爆香、生蒜捣泥拌菜；捣碎放十分钟再下锅更香",
+    tip: "空腹别吃生蒜，刺激胃；吃完嚼点茶叶或者喝牛奶去味"
+  },
+  "干辣椒": {
+    sum: "增香提辣，油温别太高不然会发苦",
+    nutri: "每 100g 约 298 千卡（干香料，每次只用几克）；含辣椒素、胡萝卜素和钾",
+    eat: "剪段去籽，温油下锅炸香，或者和花椒一起炝锅",
+    tip: "油温过高会炸糊发苦；胃肠不好的人少放"
+  },
+  "花椒": {
+    sum: "麻味来源，川菜的底味",
+    nutri: "每 100g 约 258 千卡（干香料，每次只用几克）；含挥发油、钾和少量矿物质",
+    eat: "炝锅、做椒麻油、腌肉都行；整粒炸香后可以捞出来",
+    tip: "麻味重，一次几粒就够；咬到整粒会麻嘴，介意就磨成粉"
+  },
+  "八角": {
+    sum: "炖肉卤味的定香角色，一颗就够；小心别买成有毒的莽草",
+    nutri: "每 100g 约 281 千卡（干香料，每次只用一两颗）；含茴香脑等挥发油",
+    eat: "炖肉、卤味、红烧时放一颗，久炖才出味；放多了会盖住肉味",
+    tip: "莽草和它长得像但有毒：角尖细长后弯像鹰钩、果瓣瘦小紧闭、常有 11-14 个角。真八角八成以上是 8 个角，7-9 个的也有但少见，角头圆钝、果瓣裂开见籽；光数角数不够，别靠尝来试毒，来源不明的散装别买，拿不准就扔，误食会呕吐抽搐要马上就医"
+  },
+  "香叶": {
+    sum: "炖煮用的香料，一两片就够味",
+    nutri: "每 100g 约 313 千卡（干香料，每次只用一两片）；含桉叶素等挥发油",
+    eat: "炖肉、煮汤时放一两片，出锅前挑出来",
+    tip: "叶子硬不能吃，煮完要捞掉；放多了会发苦"
+  },
+  "桂皮": {
+    sum: "甜香型香料，卤味和炖肉常用",
+    nutri: "每 100g 约 199 千卡（干香料，每次只用一小段）；含桂皮醛等挥发油",
+    eat: "掰一小段和八角一起炖，卤味里很常见",
+    tip: "香味浓，一小段就够；含香豆素，日常调味没问题，别长期大量吃"
+  },
+  "料酒": {
+    sum: "去腥靠的是酒精挥发，要早放",
+    nutri: "每 100ml 约 70 千卡；主要成分是水、酒精和盐，酒精约 10%",
+    eat: "腌肉、焯水、炒菜时沿锅边淋入，让酒精带走腥味",
+    tip: "含盐，放了它盐要少放；含酒精，久炖大部分会挥发，快炒仍有残留，孕妇和幼儿尽量少用或改用葱姜去腥"
+  },
+  "生抽": {
+    sum: "调味主力，咸度很高",
+    nutri: "每 100ml 约 60 千卡；钠含量很高，100ml 里的钠相当于 15g 左右食盐",
+    eat: "凉拌、蘸食、炒菜调味都行，出锅前放更鲜",
+    tip: "一汤匙（约 15ml）生抽差不多就有 2g 盐，放了它就要少放盐"
+  },
+  "老抽": {
+    sum: "上色用的，咸度看品牌标签，多数和生抽相当甚至更高",
+    nutri: "每 100ml 约 70 千卡；含钠和焦糖色，钠仍偏高",
+    eat: "红烧、卤味时加一点上色，别拿它当生抽用",
+    tip: "颜色深，一小勺就够，同样要算进当天的盐里"
+  },
+  "蚝油": {
+    sum: "提鲜明显，也含不少盐和糖",
+    nutri: "每 100g 约 114 千卡；含钠、糖和氨基酸类鲜味物质",
+    eat: "炒青菜、拌面、蘸食都行，出锅前放，久炒鲜味会跑",
+    tip: "含盐含糖，控盐控糖的人要少用；开盖后冷藏"
+  },
+  "醋": {
+    sum: "解腻提鲜，凉拌和蘸食都用得上",
+    nutri: "每 100ml 约 30 千卡；主要成分是醋酸和水，钠含量随品种差异大，白醋、米醋偏低，陈醋、香醋常带盐",
+    eat: "凉拌、蘸饺子、炒菜临出锅时淋一点都行",
+    tip: "胃溃疡、反流的人别空腹喝；别用金属容器长期存放"
+  },
+  "香油": {
+    sum: "芝麻榨的，香但热量很集中",
+    nutri: "每 100g 约 898 千卡；几乎全是脂肪，以不饱和脂肪酸为主",
+    eat: "凉拌、出锅前提香，几滴就够，不适合高温爆炒",
+    tip: "一勺就有 100 千卡左右，控油的话按滴算"
+  },
+  "豆瓣酱": {
+    sum: "川菜底味，咸辣都重",
+    nutri: "每 100g 约 180 千卡；钠很高，含蛋白质和辣椒素",
+    eat: "炒菜前用油炒香、炒出红油，再下其他食材",
+    tip: "含盐量很高，用了它基本不用再放盐；开盖后冷藏"
+  },
+
+  /* ---------- 肉类 ---------- */
+  "五花肉": {
+    sum: "肥瘦相间，香但脂肪高",
+    nutri: "每 100g 约 500 千卡；含蛋白质约 9g、脂肪约 50g",
+    eat: "红烧、回锅、炖酸菜都香；想少油就先煎出部分油再倒掉",
+    tip: "脂肪和热量都高，一次吃两三片就好，别天天吃"
+  },
+  "里脊肉": {
+    sum: "猪肉里最瘦的部位，蛋白质高脂肪低",
+    nutri: "每 100g 约 155 千卡；含蛋白质约 20g、脂肪约 8g 和 B 族维生素",
+    eat: "切丝炒、做糖醋里脊、滑肉片都行，切好抓点淀粉更嫩",
+    tip: "想嫩就逆着纹路切，大火快炒，久了会柴"
+  },
+  "排骨": {
+    sum: "带骨的肉，炖汤最香",
+    nutri: "每 100g 约 278 千卡；含蛋白质约 17g、脂肪约 23g、钙和磷",
+    eat: "炖汤、红烧、蒸都行；炖汤前先焯水去血沫",
+    tip: "汤里主要是脂肪，蛋白质还是在肉里，别只喝汤不吃肉"
+  },
+  "鸡腿肉": {
+    sum: "比鸡胸嫩，脂肪也高一些",
+    nutri: "每 100g 约 181 千卡；含蛋白质约 16g、脂肪约 13g、铁和锌",
+    eat: "去骨切块炒、烤、卤都行；带皮烤更香，去皮更低脂",
+    tip: "想减脂就去皮，热量能少三分之一左右"
+  },
+  "鸡胸肉": {
+    sum: "高蛋白低脂肪，健身餐的常客",
+    nutri: "每 100g 约 133 千卡；含蛋白质约 20g、脂肪约 5g",
+    eat: "切片腌一下再煎或炒，或者水煮撕成丝拌菜",
+    tip: "很容易柴，腌的时候加点淀粉或蛋清，火别太大"
+  },
+  "牛肉": {
+    sum: "蛋白质高，铁和锌也好吸收",
+    nutri: "每 100g 约 125 千卡；含蛋白质约 20g、铁、锌和 B 族维生素",
+    eat: "切丝快炒、炖、煎都行，炒之前抓点淀粉更嫩",
+    tip: "逆纹切、大火快炒；要炖就选牛腩这类带筋的部位"
+  },
+  "牛腩": {
+    sum: "带筋带油，炖久了软糯",
+    nutri: "每 100g 约 332 千卡；含蛋白质约 17g、脂肪约 29g、铁和锌",
+    eat: "切块焯水后小火炖一个半小时以上，配萝卜或番茄都好",
+    tip: "炖的时候别早放盐，肉会紧；脂肪高，汤面的油可以撇掉"
+  },
+  "羊肉": {
+    sum: "味道重、偏温，冬天吃得多",
+    nutri: "每 100g 约 203 千卡；含蛋白质约 19g、脂肪约 14g、铁和锌",
+    eat: "涮、烤、炖都行；去膻可以加葱姜、料酒，或者和白萝卜同炖",
+    tip: "涮羊肉一定要涮到全熟，别吃半生的"
+  },
+  "猪蹄": {
+    sum: "胶质多、啃着香，但脂肪也高",
+    nutri: "每 100g 约 260 千卡；含蛋白质约 22g（以胶原蛋白为主）、脂肪约 19g",
+    eat: "炖黄豆、红烧、卤都行，小火慢炖两小时才软糯",
+    tip: "胶原蛋白吃下去也是分解成氨基酸，和吃别的肉没本质区别；脂肪高，少吃"
+  },
+  "鸡翅": {
+    sum: "皮多肉少，烤和炸最受欢迎",
+    nutri: "每 100g 约 194 千卡；含蛋白质约 17g、脂肪约 12g",
+    eat: "腌好后烤、煎、可乐烧都行，划两刀更入味",
+    tip: "热量主要在皮上，想少油就去皮烤"
+  },
+  "鸡爪": {
+    sum: "几乎全是皮和筋，啃的是口感",
+    nutri: "每 100g 约 254 千卡；含蛋白质约 24g（以胶原蛋白为主）、脂肪约 17g",
+    eat: "卤、泡椒、红烧都行，煮到能脱骨最好吃",
+    tip: "卤味含盐高，当零嘴啃要算进当天的盐"
+  },
+  "鸭肉": {
+    sum: "脂肪比鸡肉多，烤鸭最出名",
+    nutri: "每 100g 约 240 千卡；含蛋白质约 16g、脂肪约 19g、铁和 B 族维生素",
+    eat: "炖汤、烤、酱烧都行；鸭汤上面油多，可以撇掉",
+    tip: "皮下脂肪厚，去皮吃更清爽；烤鸭的皮最油"
+  },
+  "鸭翅": {
+    sum: "皮多胶质厚，卤味摊常见",
+    nutri: "每 100g 约 146 千卡；含蛋白质约 16g、脂肪约 6g",
+    eat: "卤、烤、红烧都行，多煮一会儿更入味",
+    tip: "卤味含盐高，别当饭吃"
+  },
+  "培根": {
+    sum: "腌制烟熏的加工肉，香但偏咸",
+    nutri: "每 100g 约 380 千卡；脂肪和钠都很高，含蛋白质",
+    eat: "煎到微卷，配蛋、做三明治、炒菜都行",
+    tip: "加工肉制品，盐和亚硝酸盐偏高，偶尔吃就好，别天天当早餐"
+  },
+  "火腿": {
+    sum: "加工肉，中式火腿多用来提鲜，西式方腿方便夹面包",
+    nutri: "中式干腌火腿每 100g 约 330 千卡、脂肪约 27g；西式切片方腿约 120 千卡、蛋白质约 16g；两者钠都高",
+    eat: "中式火腿切片蒸或者煲汤提鲜；西式方腿直接夹面包、切丁炒饭",
+    tip: "加工肉制品，含亚硝酸盐，钠高，偶尔吃，别天天当早餐肉"
+  },
+  "腊肉": {
+    sum: "腌晒过的肉，咸香下饭",
+    nutri: "每 100g 约 498 千卡；脂肪和钠都很高，含蛋白质",
+    eat: "先蒸软再切片炒蒜苗、炒饭都香；别切太厚",
+    tip: "腌熏加工肉，含亚硝酸盐，烟熏的还可能含苯并芘，偶尔吃；下锅前用水煮一下能去掉一部分盐"
+  },
+  "香肠": {
+    sum: "加工肉，甜咸都有，方便但偏咸",
+    nutri: "每 100g 约 508 千卡；脂肪和钠都高，含蛋白质和糖",
+    eat: "蒸、煎、切丁炒饭都行，蒸过更好切",
+    tip: "加工肉制品，含亚硝酸盐，盐和脂肪都高，当配菜少量吃"
+  },
+
+  /* ---------- 水产 ---------- */
+  "鲫鱼": {
+    sum: "肉嫩刺多，炖汤最经典",
+    nutri: "每 100g 约 108 千卡；含优质蛋白约 17g、钙、磷和少量脂肪",
+    eat: "两面煎黄后加开水炖，汤才白；用姜和料酒去腥",
+    tip: "小刺很多，给老人小孩吃要仔细挑"
+  },
+  "草鱼": {
+    sum: "肉厚价廉，做水煮鱼、酸菜鱼常用",
+    nutri: "每 100g 约 113 千卡；含优质蛋白约 17g、脂肪约 5g",
+    eat: "切片做酸菜鱼、水煮鱼，或者整条清蒸、红烧",
+    tip: "草鱼胆有毒，处理时别弄破；鱼片要逆纹切，煮久了会碎"
+  },
+  "鲈鱼": {
+    sum: "刺少肉嫩，清蒸的首选",
+    nutri: "每 100g 约 105 千卡；含优质蛋白约 19g，脂肪低，含硒",
+    eat: "整条清蒸八到十分钟，淋蒸鱼豉油，再泼热油",
+    tip: "一斤左右的蒸八分钟就够，蒸久了肉会老"
+  },
+  "带鱼": {
+    sum: "海鱼里常见，只有一根主刺",
+    nutri: "每 100g 约 127 千卡；含优质蛋白约 18g、脂肪约 5g、硒",
+    eat: "切段腌一下煎到两面金黄，或者干炸、红烧",
+    tip: "表面那层银色物质不是脏东西，不用刮掉"
+  },
+  "虾": {
+    sum: "高蛋白低脂肪，做法快",
+    nutri: "每 100g 约 93 千卡；含优质蛋白约 18g、钙、硒和少量脂肪",
+    eat: "白灼、油焖、蒜蓉蒸都行，变色卷曲就熟了",
+    tip: "一定要做熟；对虾蟹过敏的人别吃"
+  },
+  "基围虾": {
+    sum: "肉质紧实，白灼最鲜",
+    nutri: "每 100g 约 101 千卡；含优质蛋白约 18g、钙、镁和硒",
+    eat: "水开后下锅煮到变红卷曲，蘸姜醋汁吃",
+    tip: "虾线是肠道，介意的话挑掉；死了太久、发黑的别买"
+  },
+  "螃蟹": {
+    sum: "秋天当季，肉不多但味道足",
+    nutri: "每 100g 约 95 千卡；含优质蛋白约 17g、钙、锌和硒",
+    eat: "清蒸最省事，蒸十五分钟以上，配姜醋",
+    tip: "死蟹会产生组胺，绝对不能吃；蟹黄蟹膏胆固醇高，少吃点"
+  },
+  "花蛤": {
+    sum: "便宜的小贝类，鲜味足",
+    nutri: "每 100g 约 62 千卡；含优质蛋白约 10g、铁、锌和钙",
+    eat: "吐净沙后爆炒或做汤，开口就熟了，别煮太久",
+    tip: "必须煮到开口，一直不开口的说明已经死了，扔掉；痛风发作时少吃"
+  },
+  "蛏子": {
+    sum: "细长的贝类，肉嫩鲜甜",
+    nutri: "每 100g 约 40 千卡；含优质蛋白约 7g、铁、锌和硒",
+    eat: "吐净沙后清蒸、爆炒或做汤，开口即熟",
+    tip: "和花蛤一样要煮到开口；贝类嘌呤高，痛风急性期别吃"
+  },
+  "鱿鱼": {
+    sum: "口感弹牙，蛋白质高脂肪低",
+    nutri: "每 100g 约 84 千卡；含优质蛋白约 17g、脂肪约 1g、硒",
+    eat: "切花刀后焯水或爆炒，十几秒就够，久了会老",
+    tip: "炒久了会硬得像橡皮；胆固醇偏高，一次别吃太多"
+  },
+  "墨鱼": {
+    sum: "肉质厚实，口感和鱿鱼相近",
+    nutri: "每 100g 约 83 千卡；含优质蛋白约 15g、钙、硒和少量脂肪",
+    eat: "切花刀爆炒、炖汤、做墨鱼丸都行",
+    tip: "和鱿鱼一样别久炒；墨汁可以吃，但会染黑整锅菜"
+  },
+  "生蚝": {
+    sum: "锌含量在食物里数一数二",
+    nutri: "每 100g 约 57 千卡；蛋白质约 11g，锌含量特别高（约 71mg），含铁和硒",
+    eat: "蒜蓉烤、蒸、做汤都行；生吃有创伤弧菌、诺如病毒风险，孕妇、婴幼儿、老人、免疫力低的人不要生吃",
+    tip: "贝类嘌呤高，痛风、高尿酸的人要限量；不新鲜的别吃"
+  },
+
+  /* ---------- 蛋禽 ---------- */
+  "鸡蛋": {
+    sum: "最方便的优质蛋白，氨基酸组成好",
+    nutri: "每 100g 约 144 千卡；含蛋白质约 13g、脂肪约 9g、卵磷脂和多种维生素",
+    eat: "煮、煎、蒸、炒都行；水开后煮八分钟就是全熟蛋",
+    tip: "尽量吃全熟的，孕妇和小孩别吃溏心蛋；土鸡蛋和普通鸡蛋营养差别不大"
+  },
+  "鸭蛋": {
+    sum: "比鸡蛋大，腥味重些，多用来腌",
+    nutri: "每 100g 约 180 千卡；含蛋白质约 13g、脂肪约 13g、维生素 A",
+    eat: "炒、煮都行，配韭菜或辣椒炒能压住腥味",
+    tip: "脂肪比鸡蛋高；腌成咸蛋后钠很高，一次吃半个到一只"
+  },
+  "鹌鹑蛋": {
+    sum: "个头小，营养和鸡蛋差不多",
+    nutri: "每 100g 约 160 千卡；含蛋白质约 13g、脂肪约 11g、维生素 A 和铁",
+    eat: "卤、煮、红烧肉里放几颗都行，煮五分钟就熟",
+    tip: "胆固醇不低，一次吃五六个就够；给小孩吃要切开防噎"
+  },
+  "皮蛋": {
+    sum: "碱味独特，配豆腐和粥很搭",
+    nutri: "每 100g 约 171 千卡；含蛋白质约 14g、脂肪约 11g，钠偏高",
+    eat: "切块拌豆腐、做皮蛋瘦肉粥；切之前把刀蘸点水不容易粘",
+    tip: "选标了「无铅工艺」的；钠高，血压高的人少吃；孕妇、幼儿少吃，给小孩吃最好煮进粥里"
+  },
+  "咸鸭蛋": {
+    sum: "蛋黄流油，咸味很重",
+    nutri: "每 100g 约 190 千卡；含蛋白质约 12g、脂肪约 13g，钠很高",
+    eat: "配白粥最经典，也可以做咸蛋黄焗南瓜",
+    tip: "一只咸鸭蛋约含 1.5g 钠，相当于 3-4g 盐，接近每天 5g 的上限，血压高的人要少吃"
+  },
+
+  /* ---------- 其他 ---------- */
+  "海带": {
+    sum: "碘含量很高，煲汤凉拌都行",
+    nutri: "每 100g 约 13 千卡（鲜）；含碘丰富、膳食纤维、钾和褐藻胶",
+    eat: "泡发后炖排骨、凉拌、做汤都行；泡发时间别太长，碘会流失",
+    tip: "碘含量高，甲状腺功能异常的人按医生建议控制，别天天大量吃"
+  },
+  "紫菜": {
+    sum: "做汤最方便，一泡就开",
+    nutri: "每 100g 约 250 千卡（干）；含碘、蛋白质、膳食纤维和钾",
+    eat: "撕碎下汤、做紫菜包饭都行，一泡就软，不用久煮",
+    tip: "同样碘含量高，甲状腺有问题的人要控制；干紫菜受潮后别吃"
+  },
+  "花生": {
+    sum: "油脂和蛋白质都高，当零食要控量",
+    nutri: "每 100g 约 574 千卡；含脂肪约 44g（以不饱和脂肪酸为主）、蛋白质约 24g",
+    eat: "水煮、炒、炖汤都行；水煮比油炸热量低",
+    tip: "吃到发苦、发霉的马上吐掉，霉变时整袋丢弃，别只挑出坏粒接着吃；黄曲霉毒素加热也去不掉"
+  },
+  "板栗": {
+    sum: "淀粉多，更像主食而不是坚果",
+    nutri: "每 100g 约 188 千卡；含淀粉、膳食纤维、钾和维生素 C",
+    eat: "蒸、煮、糖炒、炖鸡都行；切个小口再蒸不容易爆",
+    tip: "热量比一般蔬菜高很多，吃五六颗就相当于小半碗饭"
+  },
+  "西兰花": {
+    sum: "维生素 C 和萝卜硫素都不少",
+    nutri: "每 100g 约 36 千卡；富含维生素 C、维生素 K、叶酸和膳食纤维",
+    eat: "掰小朵后焯水一分钟再炒或凉拌，也可以直接蒸五分钟",
+    tip: "久煮会发黄、维生素 C 流失；梗别扔，削皮切片炒很脆"
+  },
+  "花菜": {
+    sum: "口感绵密，维生素 C 也高",
+    nutri: "每 100g 约 24 千卡；含维生素 C、维生素 K、叶酸和膳食纤维",
+    eat: "掰小朵焯水后炒、干锅、做汤都行",
+    tip: "缝隙容易藏虫和灰，用盐水泡十分钟再冲洗"
+  },
+  "豌豆": {
+    sum: "鲜豆里蛋白质和纤维都不少",
+    nutri: "每 100g 约 105 千卡；含植物蛋白约 7g、膳食纤维、叶酸和钾",
+    eat: "剥出豆粒炒虾仁、煮饭、做汤都行，煮五分钟就软",
+    tip: "含淀粉和低聚糖，一次吃太多会胀气"
+  },
+  "蚕豆": {
+    sum: "春末当季，粉糯带甜",
+    nutri: "每 100g 约 104 千卡；含植物蛋白约 9g、膳食纤维、叶酸和钾",
+    eat: "剥壳后炒、煮、做蚕豆泥都行；一定要做熟",
+    tip: "有蚕豆病（G6PD 缺乏）的人绝对不能吃，会引发溶血"
+  },
+  "玉米粒": {
+    sum: "炒饭配菜的常客，纤维不少",
+    nutri: "每 100g 约 112 千卡；含淀粉、膳食纤维、叶黄素和 B 族维生素",
+    eat: "焯水后炒饭、做沙拉、煮汤都行；冷冻玉米粒不用解冻直接下锅",
+    tip: "属于淀粉类，需要控糖的人要算进主食量"
+  }
+};
+
+// 营养信息挂到食材上；还没收录的食材不会显示营养按钮
+allItemsData.forEach(item => {
+  const nut = nutritionData[item.n];
+  if (!nut) return;
+  item.sum = nut.sum;
+  item.nutri = nut.nutri;
+  item.eat = nut.eat;
+  item.tip = nut.tip;
+});
+
 function detectWeChat() {
   return /micromessenger/i.test(navigator.userAgent);
 }
@@ -1162,6 +2290,7 @@ createApp({
     const state = ref({});
     const todoList = ref([]);
     const currentCat = ref('全部');
+    const keyword = ref('');
     const showShare = ref(false);
     const showAdd = ref(false);
     const showRoleSwitch = ref(false);
@@ -1181,6 +2310,10 @@ createApp({
     const exportText = ref('');
     const exportAreaRef = ref(null);
 
+    // 营养介绍
+    const showNutrition = ref(false);
+    const nutrition = ref({ name: '', py: '', sum: '', nutri: '', eat: '', tip: '' });
+
     const showCelebrate = ref(false);
     const celebrateHiding = ref(false);
     let celebrateTimers = [];
@@ -1192,7 +2325,7 @@ createApp({
     const failedImgs = ref({});
 
     // 图片放大预览
-    const imgViewer = ref({ show: false, src: '', name: '' });
+    const imgViewer = ref({ show: false, src: '', name: '', py: '' });
 
     const toastShow = ref(false);
     const toastMsg = ref('');
@@ -1200,9 +2333,39 @@ createApp({
 
     const cats = ['全部','叶菜','根茎','瓜果','菌菇','豆制品','调味','肉类','水产','蛋禽','其他'];
 
+    // 模糊搜索：Fuse.js 走 CDN，加载失败时退回子串匹配
+    const fuse = (typeof Fuse !== 'undefined')
+      ? new Fuse(allItems.value, {
+          includeScore: true,
+          ignoreLocation: true,
+          threshold: 0.4,
+          minMatchCharLength: 1,
+          keys: [
+            { name: 'n', weight: 3 },     // 菜名
+            { name: 'pyc', weight: 2 },   // 拼音连写 bocai
+            { name: 'py', weight: 2 },    // 拼音带空格 bo cai
+            { name: 'ini', weight: 1.5 }, // 拼音首字母 bc
+            { name: 'c', weight: 0.5 }    // 分类
+          ]
+        })
+      : null;
+
     const filteredItems = computed(() => {
-      if (currentCat.value === '全部') return allItems.value;
-      return allItems.value.filter(i => i.c === currentCat.value);
+      const q = keyword.value.trim();
+      if (!q) {
+        if (currentCat.value === '全部') return allItems.value;
+        return allItems.value.filter(i => i.c === currentCat.value);
+      }
+      // 有关键词时跨全部分类搜索
+      if (fuse) return fuse.search(q).map(r => r.item);
+      const k = q.toLowerCase();
+      return allItems.value.filter(i =>
+        (i.n && i.n.indexOf(q) > -1) ||
+        (i.pyc && i.pyc.indexOf(k) > -1) ||
+        (i.py && i.py.indexOf(k) > -1) ||
+        (i.ini && i.ini.indexOf(k) > -1) ||
+        (i.c && i.c.indexOf(q) > -1)
+      );
     });
 
     const selectedCount = computed(() =>
@@ -1246,7 +2409,7 @@ createApp({
         .map(item => {
           const found = allItems.value.find(i => i.n === item.name);
           if (found && found.img && !failedImgs.value[found.n]) {
-            return { n: found.n, img: found.img, icon: found.icon };
+            return { n: found.n, img: found.img, icon: found.icon, p: found.p || '' };
           }
           return null;
         })
@@ -1261,18 +2424,18 @@ createApp({
     /* ---------- 图片放大预览 ---------- */
     function openImgViewer(item) {
       if (!item || !item.img) return;
-      imgViewer.value = { show: true, src: item.img, name: item.n };
+      imgViewer.value = { show: true, src: item.img, name: item.n, py: item.p || '' };
     }
 
     function openImgViewerByName(name) {
       const found = allItems.value.find(i => i.n === name);
       if (found && found.img && !failedImgs.value[found.n]) {
-        imgViewer.value = { show: true, src: found.img, name: found.n };
+        imgViewer.value = { show: true, src: found.img, name: found.n, py: found.p || '' };
       }
     }
 
     function closeImgViewer() {
-      imgViewer.value = { show: false, src: '', name: '' };
+      imgViewer.value = { show: false, src: '', name: '', py: '' };
     }
 
     // 根据名称查图片
@@ -1282,7 +2445,33 @@ createApp({
       return null;
     }
 
+    // 根据名称查拼音
+    function getItemPinyin(name) {
+      const found = allItems.value.find(i => i.n === name);
+      return (found && found.p) || '';
+    }
+
+    // 根据名称查营养信息（没收录的返回 null）
+    function getItemNutrition(name) {
+      const found = allItems.value.find(i => i.n === name);
+      if (!found || !found.sum) return null;
+      return {
+        name: found.n,
+        py: found.p || '',
+        sum: found.sum,
+        nutri: found.nutri || '',
+        eat: found.eat || '',
+        tip: found.tip || ''
+      };
+    }
+
     /* ---------- 挑菜 ---------- */
+    // 点分类标签时清掉搜索词，回到按分类浏览
+    function selectCat(c) {
+      currentCat.value = c;
+      keyword.value = '';
+    }
+
     function toggleItem(name) {
       if (!state.value[name]) {
         state.value[name] = { on: false, q: 1, note: '' };
@@ -1291,12 +2480,20 @@ createApp({
     }
 
     function changeQty(name, delta) {
+      // 数量已经是 1 还按减号，就取消这道菜的勾选（备注保留，方便重新选中）
       if (!state.value[name]) {
+        if (delta < 0) return;                                  // 本来就没选中，不用处理
         state.value[name] = { on: true, q: 1, note: '' };
       }
-      const cur = state.value[name].q || 1;
-      state.value[name].q = Math.max(1, cur + delta);
-      state.value[name].on = true;
+      const s = state.value[name];
+      const cur = s.q || 1;
+      if (delta < 0 && cur <= 1) {
+        s.on = false;
+        s.q = 1;
+        return;
+      }
+      s.q = Math.max(1, cur + delta);
+      s.on = true;
     }
 
     function updateNote(name, val) {
@@ -1325,6 +2522,7 @@ createApp({
       if (!n) { showToast('请输入食材名称'); return; }
       if (allItems.value.find(i => i.n === n)) { showToast('已存在该食材'); return; }
       allItems.value.push({ n, c: newItem.value.cat, tag: '', icon: '🥬', img: '' });
+      if (fuse) fuse.setCollection(allItems.value);
       state.value[n] = { on: true, q: 1, note: '' };
       newItem.value = { name: '', cat: '其他' };
       showAdd.value = false;
@@ -1575,6 +2773,14 @@ createApp({
       showPreview.value = true;
     }
 
+    /* ---------- 营养介绍 ---------- */
+    function openNutritionByName(name) {
+      const nut = getItemNutrition(name);
+      if (!nut) return;
+      nutrition.value = nut;
+      showNutrition.value = true;
+    }
+
     /* ---------- 庆祝 ---------- */
     function checkAllDone() {
       if (activeCount.value > 0 && doneCount.value === activeCount.value) {
@@ -1662,7 +2868,8 @@ createApp({
       const struck = [];
 
       todoList.value.forEach(item => {
-        const line = `- ${item.name}` +
+        const py = item.py || getItemPinyin(item.name);
+        const line = `- ${item.name}${py ? ` [${py}]` : ''}` +
           (item.qty > 1 ? ` ×${item.qty}` : '') +
           (item.note ? `（${item.note}）` : '');
         if (item.struck) {
@@ -1820,6 +3027,7 @@ createApp({
           if (Array.isArray(arr) && arr.length) {
             todoList.value = arr.map(([name, qty, note]) => ({
               name: name || '',
+              py: getItemPinyin(name || ''),
               qty: qty || 1,
               note: note || '',
               done: false,
@@ -1861,17 +3069,18 @@ createApp({
       showCelebrate, celebrateHiding,
       qrDownloaded, qrImageUrl, failedImgs,
       imgViewer,
-      cats, filteredItems, selectedCount, doneCount, struckCount, activeCount,
+      cats, filteredItems, keyword, selectedCount, doneCount, struckCount, activeCount,
       progressPercent, allDone, previewItems,
       onImgError,
-      openImgViewer, openImgViewerByName, closeImgViewer, getItemImage,
-      toggleItem, changeQty, updateNote,
+      openImgViewer, openImgViewerByName, closeImgViewer, getItemImage, getItemPinyin, getItemNutrition,
+      toggleItem, changeQty, updateNote, selectCat,
       selectAll, clearAll, doAdd,
       openShare, copyUrl, nativeShare, downloadQR,
       toggleDone, toggleStrike, toggleAllDone, resetProgress, backToPicker,
       confirmReason, cancelReason,
       openExport, resetExportText, copyExport,
       openPreview,
+      showNutrition, nutrition, openNutritionByName,
       closeCelebrate,
       toastShow, toastMsg
     };
